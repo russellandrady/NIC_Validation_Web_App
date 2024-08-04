@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+.card-header {
+    height: 60px; /* Adjust the height as needed */
+    display: flex;
+    justify-content: center;
+}
+.container {
+    margin-top: 20px;
+}
+.form-control{
+    border-radius: 10px;
+    border-color: #d9d9d9;
+}
+.btn-primary {
+    background-color: #73bd77;
+    border-color: #73bd77;
+}
+.btn-primary:hover {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+.card {
+    border: 2px solid transparent;
+    border-image: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0) 50%, 
+        rgb(0, 0, 0) 100%) 1;
+}
+.card-header {
+    border:none;
+    background: #73bd77;
+}
+h3{
+    color: #ffffff;
+    font-size: 30px;
+    font-weight: 550;
+}
+label{
+    color: #000000;
+}
+.container-box{
+    max-width: 80vh;
+    /* animation: slideInFromLeft 0.1s ease-out; */
+}
+.custom-link{
+    text-align: center;
+    font-size: 15px;
+    margin-top: 20px;
+}
+a{
+    color: black;
+}
+a:hover{
+    color: black;
+}
+
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
