@@ -68,7 +68,7 @@ def login():
         }, os.getenv('SECRET_KEY'), algorithm='HS256')
 
         session['token'] = token
-        return redirect("http://localhost:5001")
+        return render_template('login.html')
     flash("Invalid email or password", 'error')
     return render_template('login.html')
 
