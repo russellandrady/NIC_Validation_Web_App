@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, session, url_for, redirect, jsonify
+from flask import Flask, render_template, request, flash, session, url_for, redirect, jsonify, make_response
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
@@ -6,10 +6,12 @@ import os
 from dotenv import load_dotenv
 import datetime
 import jwt
+from flask_cors import CORS
 
 load_dotenv()
 
 app=Flask(__name__)
+CORS(app, supports_credentials=True)
 app.secret_key = os.getenv('SECRET_KEY')
 
 #mysqlconfiguration
@@ -66,16 +68,16 @@ def login():
             'user_id': user[0],
             'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=5)
         }, os.getenv('SECRET_KEY'), algorithm='HS256')
-
-        session['token'] = token
-        return render_template('login.html')
+        redirect_url = f"http://localhost:5001?token={token}"
+        return redirect(redirect_url)
     flash("Invalid email or password", 'error')
+    print("error")
     return render_template('login.html')
-
+    
 @app.route('/logout')
 def logout():
     session.pop('token', None)
     return redirect(url_for('home'))
 
 if  __name__ == '__main__':
-    app.run(debug = True)
+    app.run(debug = True,port=5000)
