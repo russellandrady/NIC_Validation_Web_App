@@ -66,6 +66,7 @@ def login():
     if user and check_password_hash(user[2], password):
         token = jwt.encode({
             'user_id': user[0],
+            'username': user[1],
             'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=5)
         }, os.getenv('SECRET_KEY'), algorithm='HS256')
         redirect_url = f"http://localhost:5001?token={token}"

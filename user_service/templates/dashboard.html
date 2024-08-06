@@ -50,24 +50,13 @@
                     </tr>
                 </thead>
                 <tbody>
+                  {% for detail in session['details'] %}
                     <tr>
-                        <td data-label="NIC">123456789V</td>
-                        <td data-label="Gender">Male</td>
-                        <td data-label="DOB">1990-01-01</td>
-                        <td data-label="Age">34</td>
-                    </tr>
-                    <tr>
-                        <td data-label="NIC">987654321V</td>
-                        <td data-label="Gender">Female</td>
-                        <td data-label="DOB">1992-05-15</td>
-                        <td data-label="Age">32</td>
-                    </tr>
-                    <tr>
-                        <td data-label="NIC">456789123V</td>
-                        <td data-label="Gender">Male</td>
-                        <td data-label="DOB">1985-09-23</td>
-                        <td data-label="Age">38</td>
-                    </tr>
+                        <td data-label="NIC">{{ detail[0] }}</td>
+                        <td data-label="Gender">{{ detail[2] }}</td>
+                        <td data-label="DOB">{{ detail[1] }}</td>
+                        <td data-label="Age">{{ detail[3] }}</td>
+                  {% endfor %}
                 </tbody>
             </table>
         </div>

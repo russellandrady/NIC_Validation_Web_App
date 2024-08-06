@@ -1,4 +1,4 @@
-from flask import Flask, request, flash, redirect, jsonify, render_template, make_response
+from flask import Flask, request, flash,session,url_for, redirect, jsonify, render_template, make_response
 from dotenv import load_dotenv
 import os
 import jwt
@@ -67,15 +67,32 @@ def mainFunc(id):
         age = date.today().year - year
         dob = f"{day}/{month}/{year}"
         return [gender, dob, age]
+    
+def fetchData(user_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id, gender, dob, age FROM nics WHERE user_id = %s", (user_id,))
+    session['details'] = cur.fetchall()
+    cur.close()
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    return render_template('dashboard.html')
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    token = request.args.get('token')
+    session['details']=[]
+    token = None
+    if 'token' in request.cookies:
+        token = request.cookies.get('token')
+        return redirect(url_for('dashboard'))
+    else:
+        token = request.args.get('token')
     if token:
         try:
             decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
             user_id = decoded['user_id']
-            resp = make_response(render_template('dashboard.html', id=user_id))
+            fetchData(user_id)
+            resp = make_response(redirect(url_for('dashboard')))
             resp.set_cookie('token', token, httponly=True, samesite='Strict')
             return resp
         except jwt.ExpiredSignatureError:
@@ -84,38 +101,36 @@ def home():
         except jwt.InvalidTokenError:
             print('Invalid token')
             return jsonify({'error': 'Invalid token'}), 401
-    return render_template('dashboard.html')
+    return redirect(url_for('dashboard'))
 
-def save_file(file):
+def save_file(file, user_id, username):
     if file and file.filename.endswith('.csv'):
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"user_{username}_{file.filename}")
         file.save(file_path)
-        process_csv(file_path)
+        process_csv(file_path, user_id)
 
-def process_csv(file_path):
+def process_csv(file_path, user_id):
     df = pd.read_csv(file_path, header=None)
     ids = df[0].tolist()
-    print(ids)
     with ThreadPoolExecutor() as executor:
         for id in ids:
-            
-            executor.submit(process_id, id)
+            executor.submit(process_id, id, user_id)
 
-def process_id(id):
+def process_id(id, user_id):
     print(id)
     with app.app_context():
         result = mainFunc(str(id))
         print(result)
-        store_in_database(id, result)
+        store_in_database(id, result, user_id)
 
-def store_in_database(id, result):
+def store_in_database(id, result, user_id):
     print(result, id)
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
             INSERT INTO nics (id, user_id, gender, dob, age)
             VALUES (%s, %s, %s, %s, %s)
-        """, (str(id), 4, result[1], result[0], result[2]))
+        """, (str(id), user_id, result[1], result[0], result[2]))
         mysql.connection.commit()
         cur.close()
     except mysql.connector.Error as err:
@@ -125,22 +140,38 @@ def store_in_database(id, result):
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_files():
+    token = request.cookies.get('token')
+    if not token:
+        print('User cannot be validated')
+        return redirect(url_for('dashboard'))#attention. redirect to login
+    else:
+        try:
+            decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+            user_id = decoded['user_id']
+            username = decoded['username']
+        except jwt.ExpiredSignatureError:
+            print('User session expired')
+            return redirect(url_for('dashboard'))#attention. redirect to login
+        except jwt.InvalidTokenError:
+            print('Invalid token')
+            return redirect(url_for('dashboard'))#attention. redirect to login
     if 'files' not in request.files:
         print('No file part')
-        return render_template('dashboard.html')
+        return redirect(url_for('dashboard'))
 
     files = request.files.getlist('files')
 
     if not files:
         print('No selected file')
-        return render_template('dashboard.html')
+        return redirect(url_for('dashboard'))
 
     with ThreadPoolExecutor(max_workers=len(files)) as executor:
         for file in files:
-            executor.submit(save_file, file)
+            executor.submit(save_file, file, user_id, username)
 
     print('Files uploaded successfully')
-    return render_template('dashboard.html')
+    fetchData(user_id)
+    return redirect(url_for('dashboard'))
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():
