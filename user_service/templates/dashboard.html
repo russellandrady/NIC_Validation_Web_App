@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Form</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles_for_dashboard.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container container-box">
+      <div class="row justify-content-center">
+        <div class="col">
+          <div class="card">
+            <div class="card-header">
+              <h5>Upload Files</h5>
+            </div>
+            <div class="card-body">
+              <form action="/upload" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                  <input
+                    type="file"
+                    class="form-control-file"
+                    id="fileUpload"
+                    name="files"
+                    multiple
+                    accept=".csv"
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                  Upload
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="table ">
+                <thead>
+                    <tr>
+                        <th>NIC</th>
+                        <th>Gender</th>
+                        <th>DOB</th>
+                        <th>Age</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-label="NIC">123456789V</td>
+                        <td data-label="Gender">Male</td>
+                        <td data-label="DOB">1990-01-01</td>
+                        <td data-label="Age">34</td>
+                    </tr>
+                    <tr>
+                        <td data-label="NIC">987654321V</td>
+                        <td data-label="Gender">Female</td>
+                        <td data-label="DOB">1992-05-15</td>
+                        <td data-label="Age">32</td>
+                    </tr>
+                    <tr>
+                        <td data-label="NIC">456789123V</td>
+                        <td data-label="Gender">Male</td>
+                        <td data-label="DOB">1985-09-23</td>
+                        <td data-label="Age">38</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>
