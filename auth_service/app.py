@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, session, url_for, redirect, jsonify, make_response
+from flask import Flask, render_template, request, flash, url_for, redirect, jsonify, make_response
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
@@ -75,10 +75,10 @@ def login():
     print("error")
     return render_template('login.html')
     
-@app.route('/logout')
-def logout():
-    session.pop('token', None)
-    return redirect(url_for('home'))
+# @app.route('/logout', methods=['GET','POST'])
+# def logout():
+#     resp = make_response()
+#     return resp
 
 if  __name__ == '__main__':
     app.run(debug = True,port=5000)
