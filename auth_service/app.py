@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import datetime
 import jwt
 from flask_cors import CORS
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 
 load_dotenv()
 
@@ -20,6 +22,17 @@ app.config['MYSQL_PORT'] = 3306
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
 app.config['MYSQL_PASSWORD']=os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = 'nic_auth_service'
+
+#mailconfiguration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'onlinetutorcheck@gmail.com'
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
+mail = Mail(app)
+s = URLSafeTimedSerializer(app.secret_key)
 
 #mysql initialization
 mysql = MySQL(app)
@@ -72,8 +85,59 @@ def login():
         redirect_url = f"http://localhost:5001?token={token}"
         return redirect(redirect_url)
     flash("Invalid email or password", 'error')
-    print("error")
     return render_template('login.html')
+
+@app.route('/start_reset_password', methods=['GET', 'POST'])
+def start_reset_password():
+    return render_template('reset_email.html')
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        try:
+            email = request.form['email']
+            token = s.dumps(email, salt='password-reset-salt')
+            reset_url = url_for('reset_password', token=token, _external=True)
+            msg = Message('Password Reset Request', sender='nic@exclusiveidvalidators.com', recipients=[email])
+            msg.body = f'To reset your password, click the following link: {reset_url}'
+            mail.send(msg)
+            flash('A password reset link has been sent to your email.', 'success')
+            return redirect(url_for('home'))
+        except Exception as e:
+            flash(f"Error: {e}",'error')
+            return redirect(url_for('home'))
+    flash('Error', 'error')
+    return redirect(url_for('home'))
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=3600)
+    except:
+        flash('The password reset link is invalid or has expired.','error')
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+
+        password = request.form['password']
+        password_confirm = request.form['password_confirm']
+        if password != password_confirm:
+            flash('Passwords do not match.','error')
+            return redirect(url_for('reset_password', token=token))
+        hashed_pwd = generate_password_hash(password)
+        cur=mysql.connection.cursor()
+        cur.execute("""
+            UPDATE users
+            SET password = %s
+            WHERE email = %s;
+        """, (hashed_pwd, email))
+
+        mysql.connection.commit()
+        cur.close()
+        flash('Your password has been updated!', 'success')
+        return redirect(url_for('home'))
+
+    return render_template('reset.html', token=token)
+
     
 # @app.route('/logout', methods=['GET','POST'])
 # def logout():

@@ -8,9 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from flask_mysqldb import MySQL
 import requests
-from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 
 load_dotenv()
 
@@ -42,14 +39,12 @@ def calculateMonthDate(middle):
         if middle <= counts[i]:
             month = i
             day = middle - counts[i - 1]
-            print(f"Month: {month}, Day: {day}")  # Debug print
             break
     return month, day, middle
 
 def determineGender(middle):
     gender = "Male"
     if middle > 500:
-        print("middle")
         gender = "Female"
         middle = middle - 500
     return gender, middle
@@ -73,19 +68,20 @@ def mainFunc(id):
         dob = f"{day}/{month}/{year}"
         return [gender, dob, age]
     
-def count_users(user_id):
-    cur = mysql.connection.cursor()
-    cur.execute("""
-    SELECT
-        COUNT(CASE WHEN gender = 'Male' THEN 1 END) AS male_count,
-        COUNT(CASE WHEN gender = 'Female' THEN 1 END) AS female_count
-    FROM nics
-    WHERE user_id = %s;
-    """, (user_id,))
-    counts = cur.fetchall()
-    cur.close()
-    session['Male']=counts[0][0]
-    session['Female']=counts[0][1]
+# def count_users(user_id):
+#     cur = mysql.connection.cursor()
+#     cur.execute("""
+#     SELECT
+#         COUNT(CASE WHEN gender = 'Male' THEN 1 END) AS male_count,
+#         COUNT(CASE WHEN gender = 'Female' THEN 1 END) AS female_count
+#     FROM nics
+#     WHERE user_id = %s;
+#     """, (user_id,))
+#     counts = cur.fetchall()
+#     cur.close()
+#     session['Male']=counts[0][0]
+#     session['Female']=counts[0][1]
+
     
 def fetchData(user_id):
     cur = mysql.connection.cursor()
@@ -93,12 +89,10 @@ def fetchData(user_id):
     session['details'] = cur.fetchall()
     session['selectedGender'] = 'All'
     cur.close()
-    count_users(user_id)
 
 @app.route('/setGender', methods=['GET', 'POST'])
 def setSelectedGender():
     session['selectedGender'] = request.args.get('gender')
-    print(session['selectedGender'])
     return redirect(url_for('dashboard'))
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -125,10 +119,10 @@ def home():
             resp.set_cookie('token', token, httponly=True, samesite='Strict')
             return resp
         except jwt.ExpiredSignatureError:
-            print('Expired token')
+            flash('User session expired','error')
             return jsonify({'error': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
-            print('Invalid token')
+            flash('Invalid token','error')
             return jsonify({'error': 'Invalid token'}), 401
     return redirect("http://localhost:5000/")
 
@@ -146,14 +140,11 @@ def process_csv(file_path, user_id):
             executor.submit(process_id, id, user_id)
 
 def process_id(id, user_id):
-    print(id)
     with app.app_context():
         result = mainFunc(str(id))
-        print(result)
         store_in_database(id, result, user_id)
 
 def store_in_database(id, result, user_id):
-    print(result, id)
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
@@ -163,15 +154,15 @@ def store_in_database(id, result, user_id):
         mysql.connection.commit()
         cur.close()
     except mysql.connector.Error as err:
-        print(f"Error: {err}")
+        flash(f"Error: {err}", 'error')
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        flash(f"Unexpected error: {e}", 'error')
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_files():
     token = request.cookies.get('token')
     if not token:
-        print('User cannot be validated')
+        flash('User cannot be validated','error')
         return redirect("http://localhost:5000/")
     else:
         try:
@@ -179,26 +170,26 @@ def upload_files():
             user_id = decoded['user_id']
             username = decoded['username']
         except jwt.ExpiredSignatureError:
-            print('User session expired')
+            flash('User session expired','error')
             return redirect("http://localhost:5000/")
         except jwt.InvalidTokenError:
-            print('Invalid token')
+            flash('Invalid token','error')
             return redirect("http://localhost:5000/")
     if 'files' not in request.files:
-        print('No file part')
+        flash('No file part','error')
         return redirect(url_for('dashboard'))
 
     files = request.files.getlist('files')
 
     if not files:
-        print('No selected file')
+        flash('No file selected','error')
         return redirect(url_for('dashboard'))
 
     with ThreadPoolExecutor(max_workers=len(files)) as executor:
         for file in files:
             executor.submit(save_file, file, user_id, username)
 
-    print('Files uploaded successfully')
+    flash('Files uploaded successfully','success')
     fetchData(user_id)
     return redirect(url_for('dashboard'))
 
@@ -224,19 +215,20 @@ def delete_row():
     cur.close()
     token = request.cookies.get('token')
     if not token:
-        print('User cannot be validated')
+        flash('User cannot be validated','error')
         return redirect("http://localhost:5000/")
     else:
         try:
             decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
             user_id = decoded['user_id']
         except jwt.ExpiredSignatureError:
-            print('User session expired')
+            flash('User session expired','error')
             return redirect("http://localhost:5000/")
         except jwt.InvalidTokenError:
-            print('Invalid token')
+            flash('Invalid token','error')
             return redirect("http://localhost:5000/")
     fetchData(user_id)
+    flash('Row deleted successfully','success')
     return redirect(url_for('dashboard'))
 
 @app.route('/download/csv', methods=['GET'])

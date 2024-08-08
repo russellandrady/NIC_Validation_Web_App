@@ -12,8 +12,20 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles_for_dashboard.css') }}"
     />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">
+        {{ message }}
+        <span
+          class="flash-close"
+          onclick="this.parentElement.style.display='none';"
+          >×</span
+        >
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
     <div class="container container-box">
       <div class="row justify-content-center">
         <div class="col">
@@ -35,6 +47,7 @@
                     name="files"
                     multiple
                     accept=".csv"
+                    required
                   />
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">
@@ -46,97 +59,209 @@
           <div class="custom-link">
             <a href="{{url_for('logout')}}">Logout</a>
           </div>
-          <div class="card">
+          <div class="card" style="margin-top: -20px;">
             <div class="card-body">
               <div class="row justify-content-center">
                 <div class="col text-center">
                   <a
                     href="{{url_for('setSelectedGender',gender='All')}}"
-                    class="gender {% if session['selectedGender'] == 'All' %}green{% endif %}"
-                    >All: {{session['Male']+session['Female']}}</a
+                    id="allCount" class="gender {% if session['selectedGender'] == 'All' %}green{% endif %}"
+                    >All: 0</a
                   >
                 </div>
                 <div class="col text-center">
                   <a
                     href="{{url_for('setSelectedGender',gender='Male')}}"
-                    class="gender {% if session['selectedGender'] == 'Male' %}green{% endif %}"
-                    >Male: {{session['Male']}}</a
+                    id="maleCount" class="gender {% if session['selectedGender'] == 'Male' %}green{% endif %}"
+                    >Male: 0</a
                   >
                 </div>
                 <div class="col text-center">
                   <a
                     href="{{url_for('setSelectedGender',gender='Female')}}"
-                    class="gender {% if session['selectedGender'] == 'Female' %}green{% endif %}"
-                    >Female: {{session['Female']}}</a
+                    id="femaleCount" class="gender {% if session['selectedGender'] == 'Female' %}green{% endif %}"
+                    >Female: 0</a
                   >
                 </div>
               </div>
             </div>
           </div>
-          <div class="card">
+          <div class="card-custom">
             <div class="card-body">
               <div class="row justify-content-center">
                 <div class="col text-center">
-                  <a
-                    href="{{url_for('download_pdf')}}"
-                    
-                    >PDF</a
-                  >
+                  <a href="{{url_for('download_pdf')}}">PDF</a>
                 </div>
                 <div class="col text-center">
-                  <a
-                    href="{{url_for('download_excel')}}"
-                    
-                    >EXCEL</a
-                  >
+                  <a href="{{url_for('download_excel')}}">EXCEL</a>
                 </div>
                 <div class="col text-center">
-                  <a
-                    href="{{url_for('download_csv')}}"
-                    
-                    >CSV</a
-                  >
+                  <a href="{{url_for('download_csv')}}">CSV</a>
                 </div>
               </div>
             </div>
           </div>
           <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>NIC</th>
-                  <th>Gender</th>
-                  <th>DOB</th>
-                  <th>Age</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for detail in session['details'] %} 
-                {% if session['selectedGender'] == 'All' or detail[1] == session['selectedGender']%}
-                <tr>
-                  <td data-label="NIC">{{ detail[0] }}</td>
-                  <td data-label="Gender">{{ detail[1] }}</td>
-                  <td data-label="DOB">{{ detail[2] }}</td>
-                  <td data-label="Age">{{ detail[3] }}</td>
-                  <td>
-                    <a
-                      href="{{ url_for('delete_row', id=detail[4]) }}"
-                      class="delete-url"
-                      >Delete</a
-                    >
-                  </td>
-                </tr>
-                {% endif %} {% endfor %}
-              </tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>NIC</th>
+                    <th>Gender</th>
+                    <th>DOB</th>
+                    <th>Age</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for detail in session['details'] %} {% if
+                  session['selectedGender'] == 'All' or detail[1] ==
+                  session['selectedGender']%}
+                  <tr>
+                    <td data-label="NIC">{{ detail[0] }}</td>
+                    <td data-label="Gender">{{ detail[1] }}</td>
+                    <td data-label="DOB">{{ detail[2] }}</td>
+                    <td data-label="Age">{{ detail[3] }}</td>
+                    <td>
+                      <a
+                        href="{{ url_for('delete_row', id=detail[4]) }}"
+                        class="delete-url"
+                        >Delete</a
+                      >
+                    </td>
+                  </tr>
+                  {% endif %} {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
+          <div class="card" style="margin-bottom: 20px; margin-top: -20px;">
+            <div class="card-body">
+                <!-- Bar Chart -->
+                <canvas id="barChart"></canvas>
+                <!-- Pie Chart -->
+                <canvas id="pieChart" style="margin-top: 20px;"></canvas>
+            </div>
+        </div>
         </div>
       </div>
     </div>
+    <!-- Embed JSON data -->
+    <script id="details-data" type="application/json">
+      {{ session['details'] | tojson | safe }}
+  </script>
+
+  <script>
+      // Parse JSON data
+      const details = JSON.parse(document.getElementById('details-data').textContent);
+      
+      // Function to process data for bar chart
+      function processBarChartData(details) {
+          const ageGroups = {
+              '0-20': { male: 0, female: 0 },
+              '20-40': { male: 0, female: 0 },
+              '40-60': { male: 0, female: 0 },
+              '60-80': { male: 0, female: 0 },
+              '80-100': { male: 0, female: 0 }
+          };
+
+          details.forEach(detail => {
+              const age = detail[3];
+              const gender = detail[1].toLowerCase();
+              if (age <= 20) ageGroups['0-20'][gender]++;
+              else if (age <= 40) ageGroups['20-40'][gender]++;
+              else if (age <= 60) ageGroups['40-60'][gender]++;
+              else if (age <= 80) ageGroups['60-80'][gender]++;
+              else if (age <= 100) ageGroups['80-100'][gender]++;
+          });
+
+          return ageGroups;
+      }
+
+      // Function to process data for pie chart
+      function processPieChartData(details) {
+          const genderCounts = { male: 0, female: 0 };
+
+          details.forEach(detail => {
+              const gender = detail[1].toLowerCase();
+              genderCounts[gender]++;
+          });
+          document.getElementById('allCount').textContent = `All: ${details.length}`;
+    document.getElementById('maleCount').textContent = `Male: ${genderCounts.male}`;
+    document.getElementById('femaleCount').textContent = `Female: ${genderCounts.female}`;
+
+          return genderCounts;
+      }
+
+      // Process data
+      const barChartData = processBarChartData(details);
+      const pieChartData = processPieChartData(details);
+
+      // Bar Chart
+      const barCtx = document.getElementById('barChart').getContext('2d');
+      new Chart(barCtx, {
+          type: 'bar',
+          data: {
+              labels: ['0-20', '20-40', '40-60', '60-80', '80-100'],
+              datasets: [
+                  {
+                      label: 'Male',
+                      data: Object.values(barChartData).map(group => group.male),
+                      backgroundColor: 'rgba(217, 217, 217, 0.2)',
+                      borderColor: 'rgba(0, 0, 0, 1)',
+                      borderWidth: 1
+                  },
+                  {
+                      label: 'Female',
+                      data: Object.values(barChartData).map(group => group.female),
+                      backgroundColor: 'rgba(115, 189, 119, 0.2)',
+                      borderColor: 'rgba(0 ,0 ,0 , 1)',
+                      borderWidth: 1
+                  }
+              ]
+          },
+          options: {
+              scales: {
+                  x: {
+                      beginAtZero: true
+                  },
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+
+      // Pie Chart
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      new Chart(pieCtx, {
+          type: 'pie',
+          data: {
+              labels: ['Male', 'Female'],
+              datasets: [{
+                  data: [pieChartData.male, pieChartData.female],
+                  backgroundColor: ['rgba(217, 217, 217, 0.2)', 'rgba(115, 189, 119, 0.2)'],
+                  borderColor: ['rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)'],
+                  borderWidth: 1
+              }]
+          }
+      });
+      document.addEventListener('DOMContentLoaded', function() {
+        // Select all flash messages
+        const flashMessages = document.querySelectorAll('.flash');
+        
+        // Set a timeout to hide each flash message after 2 seconds
+        flashMessages.forEach(function(flashMessage) {
+            setTimeout(function() {
+                flashMessage.style.display = 'none';
+            }, 2000); // 2000 milliseconds = 2 seconds
+        });
+    });
+  </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   </body>
+  
 </html>

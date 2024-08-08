@@ -11,37 +11,51 @@
     />
 </head>
 <body>
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      {{ message }}
+      <span
+        class="flash-close"
+        onclick="this.parentElement.style.display='none';"
+        >×</span
+      >
+    </div>
+    {% endfor %} {% endif %} {% endwith %}
   <div class="container container-box">
     <div class="row justify-content-center">
       <div class="col">
         <div class="card">
           <div class="card-header">
-            <h3>REGISTER</h3>
+            <h5>Confirm Reset Password</h5>
           </div>
           <div class="card-body">
-            <form method="post" action="/register">
+            <form method="post" action="/forgot-password">
               <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
-              </div>
-              <div class="form-group">
-                <label for="username">Email</label>
+                <label for="email">Enter email</label>
                 <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
               </div>
-              <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" id="c" name="password" placeholder="Enter password" required>
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Register</button>
-              <div class="form-group custom-link">
-                <p>Already have account? <a href="{{url_for('home')}}">Login</a></p>
-              </div>
+              <button type="submit" class="btn btn-primary btn-block">Send Email</button>  
             </form>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <script>
+    // Wait for the DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select all flash messages
+        const flashMessages = document.querySelectorAll('.flash');
+        
+        // Set a timeout to hide each flash message after 2 seconds
+        flashMessages.forEach(function(flashMessage) {
+            setTimeout(function() {
+                flashMessage.style.display = 'none';
+            }, 2000); // 2000 milliseconds = 2 seconds
+        });
+    });
+</script>
 
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
