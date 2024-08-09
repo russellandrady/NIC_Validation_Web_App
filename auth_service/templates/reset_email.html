@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Form</title>
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <link
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Form</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
-</head>
-<body>
-  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %} {% for category, message in messages %}
     <div class="flash flash-{{ category }}">
       {{ message }}
@@ -22,43 +25,52 @@
       >
     </div>
     {% endfor %} {% endif %} {% endwith %}
-  <div class="container container-box">
-    <div class="row justify-content-center">
-      <div class="col">
-        <div class="card">
-          <div class="card-header">
-            <h5>Confirm Reset Password</h5>
-          </div>
-          <div class="card-body">
-            <form method="post" action="/forgot-password">
-              <div class="form-group">
-                <label for="email">Enter email</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Send Email</button>  
-            </form>
+    <div class="container container-box">
+      <div class="row justify-content-center">
+        <div class="col">
+          <div class="card">
+            <div class="card-header">
+              <h5>Confirm Reset Password</h5>
+            </div>
+            <div class="card-body">
+              <form method="post" action="/forgot-password">
+                <div class="form-group">
+                  <label for="email">Enter email</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    name="email"
+                    placeholder="Enter email"
+                    required
+                  />
+                </div>
+                <button type="submit" class="btn bton-primary btn-block">
+                  Send Email
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <script>
-    // Wait for the DOM to be fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
+    <script>
+      // Wait for the DOM to be fully loaded
+      document.addEventListener("DOMContentLoaded", function () {
         // Select all flash messages
-        const flashMessages = document.querySelectorAll('.flash');
-        
-        // Set a timeout to hide each flash message after 2 seconds
-        flashMessages.forEach(function(flashMessage) {
-            setTimeout(function() {
-                flashMessage.style.display = 'none';
-            }, 2000); // 2000 milliseconds = 2 seconds
-        });
-    });
-</script>
+        const flashMessages = document.querySelectorAll(".flash");
 
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
+        // Set a timeout to hide each flash message after 2 seconds
+        flashMessages.forEach(function (flashMessage) {
+          setTimeout(function () {
+            flashMessage.style.display = "none";
+          }, 2000); // 2000 milliseconds = 2 seconds
+        });
+      });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
 </html>
