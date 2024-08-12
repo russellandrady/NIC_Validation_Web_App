@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Reset Email</title>
     <link
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
@@ -30,46 +30,24 @@
         <div class="col">
           <div class="card">
             <div class="card-header">
-              <h3>LOGIN</h3>
+              <h5>Confirm Reset Password</h5>
             </div>
             <div class="card-body">
-              <form method="post" action="/login">
+              <form method="post" action="/forgot-password">
                 <div class="form-group">
-                  <label for="username">Username</label>
+                  <label for="email">Enter email</label>
                   <input
-                    type="text"
+                    type="email"
                     class="form-control"
-                    id="username"
-                    name="username"
-                    placeholder="Enter username"
+                    id="email"
+                    name="email"
+                    placeholder="Enter email"
                     required
                   />
-                </div>
-                <div class="form-group">
-                  <label for="password">Password</label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    id="password"
-                    name="password"
-                    placeholder="Enter password"
-                    required
-                  />
-                </div>
-                <div class="form-group custom-link">
-                  <a href="{{url_for('start_reset_password')}}"
-                    >Forgot password</a
-                  >
                 </div>
                 <button type="submit" class="btn bton-primary btn-block">
-                  Login
+                  Send Email
                 </button>
-                <div class="form-group custom-link">
-                  <p>
-                    Don't have account?
-                    <a href="{{url_for('register')}}">Register</a>
-                  </p>
-                </div>
               </form>
             </div>
           </div>
@@ -86,7 +64,7 @@
         flashMessages.forEach(function (flashMessage) {
           setTimeout(function () {
             flashMessage.style.display = "none";
-          }, 4000); // 4000 milliseconds = 4 seconds
+          }, 2000); // 2000 milliseconds = 2 seconds
         });
       });
     </script>

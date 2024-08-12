@@ -9,25 +9,32 @@ body {
     justify-content: center;
 }
 .container {
-    margin-top: 20px;
+    margin-top: 60px;
 }
 .form-control{
     border-radius: 10px;
     border-color: #d9d9d9;
 }
-.btn-primary {
+.bton-primary {
     background-color: #73bd77;
     border-color: #73bd77;
+    color: white;
 }
-.btn-primary:hover {
+.bton-primary:hover {
     background-color: #4CAF50;
     border-color: #4CAF50;
+    color: white;
 }
 .card {
     border: 2px solid transparent;
     border-image: linear-gradient(to bottom,
         rgba(0, 0, 0, 0) 50%, 
         rgb(0, 0, 0) 100%) 1;
+}
+.card-custom {
+    border: 2px solid transparent;
+    border-color: #000000;
+    border-top: none; /* Remove the top border */
 }
 .card-header {
     border:none;
@@ -43,23 +50,89 @@ label{
     color: #000000;
 }
 .container-box{
-    min-width: 80vh;
+    width: 90%;
 }
 .custom-link{
     text-align: center;
     font-size: 15px;
     margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: bold;
 }
 a{
     color: black;
+    transition: 0.3s;
 }
 a:hover{
     color: black;
 }
-.table tbody tr {
+/* .table tbody tr {
     transition: background-color 0.3s ease-in-out;
+} */
+
+/* .table tbody tr:hover {
+    background-color: #d9d9d9;
+    cursor: pointer;
+} */
+.table {
+    width: 100%;
 }
 
-.table tbody tr:hover {
-    background-color: #d9d9d9;
+.table th, .table td {
+    
+    padding: 8px;
+    text-align: center;
+    border-right: 1px solid #ddd;
+}
+.table th:last-child, .table td:last-child {
+    border-right: none;
+}
+.table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+.table tbody tr {
+    margin-bottom: 20px;
+}
+.table tbody tr:last-child {
+    margin-bottom: 0;
+}
+
+.delete-url:hover{
+color: #ff3838;
+}
+.green{
+    color: #4CAF50;
+}
+.flash {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+.flash {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    width: 300px;
+    text-align: center;
+    border-radius: 10px;
+    z-index: 1000;
+    opacity: 0.7;
+}
+.flash-success {
+    background-color: #84df87;
+    color: white;
+}
+.flash-error {
+    background-color: #eb837c;
+    color: white;
+}
+.flash-close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    cursor: pointer;
 }
