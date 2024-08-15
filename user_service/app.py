@@ -10,6 +10,7 @@ from flask_mysqldb import MySQL
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+import re
 
 load_dotenv()
 
@@ -53,11 +54,19 @@ def determineGender(middle):
 
 def mainFunc(id):
     global middle
-    if id[-1] == "V":
+    if re.fullmatch(r'\d{9}[vV]', id):
         year = int("19" + id[0:2])
         middle = int(id[2:5])
-        if (len(id) != 10):
+        gender, middle = determineGender(middle)
+        if middle < 0 or middle > 366:
             return ["invalid nic", "invalid nic", 0]
+        month, day, middle = calculateMonthDate(middle)
+        age = date.today().year - year
+        dob = f"{day}/{month}/{year}"
+        return [gender, dob, age]
+    elif re.fullmatch(r'\d{12}', id):
+        year = int(id[0:4])
+        middle = int(id[4:7])
         gender, middle = determineGender(middle)
         if middle < 0 or middle > 366:
             return ["invalid nic", "invalid nic", 0]
@@ -66,17 +75,7 @@ def mainFunc(id):
         dob = f"{day}/{month}/{year}"
         return [gender, dob, age]
     else:
-        year = int(id[0:4])
-        middle = int(id[4:7])
-        if (len(id) != 12):
-            return ["invalid nic", "invalid nic", 0]
-        gender, middle = determineGender(middle)
-        if middle < 0 or middle > 366:
-            return ["invalid nic", "invalid nic", 0]
-        month, day, middle = calculateMonthDate(middle)
-        age = date.today().year - year
-        dob = f"{day}/{month}/{year}"
-        return [gender, dob, age]
+        return ["invalid nic", "invalid nic", 0]
     
 # def count_users(user_id):
 #     cur = mysql.connection.cursor()
@@ -109,11 +108,21 @@ def setSelectedGender():
         redirect(url_for('dashboard'))
     return redirect(url_for('dashboard'))
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/uploads', methods=['GET', 'POST'])
 def dashboard():
     try:
         if 'token' in request.cookies:
             return render_template('dashboard.html')
+        return redirect("http://localhost:5000/")
+    except Exception as e:
+        flash(f"Error: {e}", 'error')
+        return redirect("http://localhost:5000/")
+
+@app.route('/charts', methods=['GET', 'POST'])
+def charts():
+    try:
+        if 'details' in session:
+            return render_template('charts.html')
         return redirect("http://localhost:5000/")
     except Exception as e:
         flash(f"Error: {e}", 'error')
@@ -160,6 +169,7 @@ def process_csv(file_path, user_id):
     os.remove(file_path)
     with ThreadPoolExecutor() as executor:
         for id in ids:
+            id = id.strip()
             executor.submit(process_id, id, user_id)
     
 

@@ -104,6 +104,53 @@ color: #ff3838;
 .green{
     color: #4CAF50;
 }
+.navbar-custom {
+    background-color: #73bd77;/* Adjust the height as needed */
+  }
+  
+  .navbar-custom .navbar-brand,
+  .navbar-custom .nav-link {
+    color: white;
+    transition: 0.3s;
+  }
+  
+  .navbar-custom .nav-link:hover {
+    color: #d9d9d9;
+  }
+  
+  .navbar-custom .navbar-toggler-icon {
+    background-image: none;
+    color: white;
+  }
+  
+  .navbar-custom .navbar-toggler-icon::before {
+    content: '\2630'; /* Unicode character for menu icon */
+    font-size: 1.5em;
+    color: white;
+  }
+  
+  .statistics-container {
+  background-color: #f8f9fa; /* Light grey background */
+  padding: 20px;
+  border: #000000 1px solid; /* Dark grey border */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+
+
+.statistics-container p {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+  
+  .statistics-container h5 {
+    font-weight: bold;
+    color: #000000;
+    
+  }
+  
+  
 .flash {
     padding: 10px;
     margin-bottom: 10px;

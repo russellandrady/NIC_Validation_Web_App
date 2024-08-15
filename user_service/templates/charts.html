@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles_for_dashboard.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      {{ message }}
+      <span
+        class="flash-close"
+        onclick="this.parentElement.style.display='none';"
+        >×</span
+      >
+    </div>
+    {% endfor %} {% endif %} {% endwith %}
+    <div class="navbar-custom">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container" style="margin-top: -1px">
+          <a class="navbar-brand" href="#">Nic Validator</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('dashboard')}}">Uploads</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('dashboard')}}">Charts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="container container-box">
+      <div class="row justify-content-center">
+        <div class="col">
+          <div class="card" style="margin-top: -20px; border: none">
+            <div class="card-body">
+              <div class="row justify-content-center">
+                <div class="col text-center">
+                  <a
+                    href="{{url_for('setSelectedGender',gender='Male')}}"
+                    id="maleCount"
+                    class="gender {% if session['selectedGender'] == 'Male' %}green{% endif %}"
+                    >Male: 0</a
+                  >
+                </div>
+                <div class="col text-center">
+                  <a
+                    href="{{url_for('setSelectedGender',gender='Female')}}"
+                    id="femaleCount"
+                    class="gender {% if session['selectedGender'] == 'Female' %}green{% endif %}"
+                    >Female: 0</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom: 20px; margin-top: -20px">
+            <div class="card-body">
+              <canvas id="barChart"></canvas>
+              <div class="justify-content-center">
+                <div class="row">
+                  <div class="col-md-6">
+                    <canvas id="pieChart" style="margin-top: 60px"></canvas>
+                  </div>
+
+                  <div class="col-md-6" style="margin-top: 10px;">
+                    <div id="statistics" class="container statistics-container">
+                      <h5><p id="averageAge"></p></h5>
+                    </div>
+                    <div id="statistics" class="container statistics-container">
+                      <h5><p id="oldestPerson"></p></h5>
+                    </div>
+                    <div id="statistics" class="container statistics-container">
+                      <h5><p id="youngestPerson"></p></h5>
+                    </div>
+                    <div id="statistics" class="container statistics-container">
+                      <h5><p id="genderRatio"></p></h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Embed JSON data -->
+    <script id="details-data" type="application/json">
+      {{ session['details'] | tojson | safe }}
+    </script>
+
+    <script>
+      // Parse JSON data
+      const details = JSON.parse(
+        document.getElementById("details-data").textContent
+      );
+
+      // Function to process data for bar chart
+      function processBarChartData(details) {
+        const ageGroups = {
+          "0-20": { male: 0, female: 0 },
+          "20-40": { male: 0, female: 0 },
+          "40-60": { male: 0, female: 0 },
+          "60-80": { male: 0, female: 0 },
+          "80-100": { male: 0, female: 0 },
+        };
+
+        details.forEach((detail) => {
+          const age = detail[3];
+          const gender = detail[1].toLowerCase();
+          if (age <= 20) ageGroups["0-20"][gender]++;
+          else if (age <= 40) ageGroups["20-40"][gender]++;
+          else if (age <= 60) ageGroups["40-60"][gender]++;
+          else if (age <= 80) ageGroups["60-80"][gender]++;
+          else if (age <= 100) ageGroups["80-100"][gender]++;
+        });
+
+        return ageGroups;
+      }
+
+      // Function to process data for pie chart
+      function processPieChartData(details) {
+        const genderCounts = { male: 0, female: 0 };
+
+        details.forEach((detail) => {
+          const gender = detail[1].toLowerCase();
+          genderCounts[gender]++;
+        });
+        document.getElementById(
+          "maleCount"
+        ).textContent = `Male: ${genderCounts.male}`;
+        document.getElementById(
+          "femaleCount"
+        ).textContent = `Female: ${genderCounts.female}`;
+
+        return genderCounts;
+      }
+
+      // Process data
+      const barChartData = processBarChartData(details);
+      const pieChartData = processPieChartData(details);
+
+      // Bar Chart
+      const barCtx = document.getElementById("barChart").getContext("2d");
+      new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels: ["0-20", "20-40", "40-60", "60-80", "80-100"],
+          datasets: [
+            {
+              label: "Male",
+              data: Object.values(barChartData).map((group) => group.male),
+              backgroundColor: "rgba(217, 217, 217, 0.2)",
+              borderColor: "rgba(0, 0, 0, 1)",
+              borderWidth: 1,
+            },
+            {
+              label: "Female",
+              data: Object.values(barChartData).map((group) => group.female),
+              backgroundColor: "rgba(115, 189, 119, 0.2)",
+              borderColor: "rgba(0 ,0 ,0 , 1)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            x: {
+              beginAtZero: true,
+            },
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      // Pie Chart
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+      new Chart(pieCtx, {
+        type: "pie",
+        data: {
+          labels: ["Male", "Female"],
+          datasets: [
+            {
+              data: [pieChartData.male, pieChartData.female],
+              backgroundColor: [
+                "rgba(217, 217, 217, 0.2)",
+                "rgba(115, 189, 119, 0.2)",
+              ],
+              borderColor: ["rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)"],
+              borderWidth: 1,
+            },
+          ],
+        },
+      });
+      document.addEventListener("DOMContentLoaded", function () {
+        // Select all flash messages
+        const flashMessages = document.querySelectorAll(".flash");
+
+        // Set a timeout to hide each flash message after 2 seconds
+        flashMessages.forEach(function (flashMessage) {
+          setTimeout(function () {
+            flashMessage.style.display = "none";
+          }, 2000); // 2000 milliseconds = 2 seconds
+        });
+      });
+      // Function to calculate statistics
+      function calculateStatistics(details) {
+        let totalAge = 0;
+        let validCount = 0;
+        let oldest = null;
+        let youngest = null;
+        let maleCount = 0;
+        let femaleCount = 0;
+
+        details.forEach((detail) => {
+          const age = detail[3];
+          const gender = detail[1].toLowerCase();
+          const nic = detail[0];
+
+          // Skip invalid NICs (e.g., age 0 or gender not "male" or "female")
+          if (age <= 0 || (gender !== "male" && gender !== "female")) {
+            return;
+          }
+
+          totalAge += age;
+          validCount++;
+
+          if (!oldest || age > oldest[3]) {
+            oldest = detail;
+          }
+          if (!youngest || age < youngest[3]) {
+            youngest = detail;
+          }
+
+          if (gender === "male") maleCount++;
+          if (gender === "female") femaleCount++;
+        });
+
+        const averageAge =
+          validCount > 0 ? (totalAge / validCount).toFixed(2) : "N/A";
+        const genderRatio =
+          femaleCount > 0 ? (maleCount / femaleCount).toFixed(2) : "N/A";
+
+        return {
+          averageAge,
+          oldest,
+          youngest,
+          genderRatio,
+        };
+      }
+
+      // Calculate statistics
+      const stats = calculateStatistics(details);
+
+      // Display statistics
+      document.getElementById(
+        "averageAge"
+      ).textContent = `Average Age: ${stats.averageAge}`;
+      document.getElementById("oldestPerson").textContent = stats.oldest
+        ? `Oldest Person: ${stats.oldest[0]} (${stats.oldest[3]} years old)`
+        : "Oldest Person: N/A";
+      document.getElementById("youngestPerson").textContent = stats.youngest
+        ? `Youngest Person: ${stats.youngest[0]} (${stats.youngest[3]} years old)`
+        : "Youngest Person: N/A";
+      document.getElementById(
+        "genderRatio"
+      ).textContent = `Gender Ratio (Male/Female): ${stats.genderRatio}`;
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

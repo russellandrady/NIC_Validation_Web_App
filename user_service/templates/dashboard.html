@@ -26,6 +26,39 @@
       >
     </div>
     {% endfor %} {% endif %} {% endwith %}
+    <div class="navbar-custom">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container" style="margin-top: -1px">
+          <a class="navbar-brand" href="#">Nic Validator</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('dashboard')}}"
+                  >Uploads</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('charts')}}">Charts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
     <div class="container container-box">
       <div class="row justify-content-center">
         <div class="col">
@@ -56,9 +89,7 @@
               </form>
             </div>
           </div>
-          <div class="custom-link">
-            <a href="{{url_for('logout')}}">Logout</a>
-          </div>
+
           <div class="card" style="margin-top: -20px">
             <div class="card-body">
               <div class="row justify-content-center">
@@ -138,14 +169,6 @@
               </table>
             </div>
           </div>
-          <div class="card" style="margin-bottom: 20px; margin-top: -20px">
-            <div class="card-body">
-              <!-- Bar Chart -->
-              <canvas id="barChart"></canvas>
-              <!-- Pie Chart -->
-              <canvas id="pieChart" style="margin-top: 20px"></canvas>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -159,30 +182,6 @@
       const details = JSON.parse(
         document.getElementById("details-data").textContent
       );
-
-      // Function to process data for bar chart
-      function processBarChartData(details) {
-        const ageGroups = {
-          "0-20": { male: 0, female: 0 },
-          "20-40": { male: 0, female: 0 },
-          "40-60": { male: 0, female: 0 },
-          "60-80": { male: 0, female: 0 },
-          "80-100": { male: 0, female: 0 },
-        };
-
-        details.forEach((detail) => {
-          const age = detail[3];
-          const gender = detail[1].toLowerCase();
-          if (age <= 20) ageGroups["0-20"][gender]++;
-          else if (age <= 40) ageGroups["20-40"][gender]++;
-          else if (age <= 60) ageGroups["40-60"][gender]++;
-          else if (age <= 80) ageGroups["60-80"][gender]++;
-          else if (age <= 100) ageGroups["80-100"][gender]++;
-        });
-
-        return ageGroups;
-      }
-
       // Function to process data for pie chart
       function processPieChartData(details) {
         const genderCounts = { male: 0, female: 0 };
@@ -203,65 +202,7 @@
 
         return genderCounts;
       }
-
-      // Process data
-      const barChartData = processBarChartData(details);
       const pieChartData = processPieChartData(details);
-
-      // Bar Chart
-      const barCtx = document.getElementById("barChart").getContext("2d");
-      new Chart(barCtx, {
-        type: "bar",
-        data: {
-          labels: ["0-20", "20-40", "40-60", "60-80", "80-100"],
-          datasets: [
-            {
-              label: "Male",
-              data: Object.values(barChartData).map((group) => group.male),
-              backgroundColor: "rgba(217, 217, 217, 0.2)",
-              borderColor: "rgba(0, 0, 0, 1)",
-              borderWidth: 1,
-            },
-            {
-              label: "Female",
-              data: Object.values(barChartData).map((group) => group.female),
-              backgroundColor: "rgba(115, 189, 119, 0.2)",
-              borderColor: "rgba(0 ,0 ,0 , 1)",
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          scales: {
-            x: {
-              beginAtZero: true,
-            },
-            y: {
-              beginAtZero: true,
-            },
-          },
-        },
-      });
-
-      // Pie Chart
-      const pieCtx = document.getElementById("pieChart").getContext("2d");
-      new Chart(pieCtx, {
-        type: "pie",
-        data: {
-          labels: ["Male", "Female"],
-          datasets: [
-            {
-              data: [pieChartData.male, pieChartData.female],
-              backgroundColor: [
-                "rgba(217, 217, 217, 0.2)",
-                "rgba(115, 189, 119, 0.2)",
-              ],
-              borderColor: ["rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)"],
-              borderWidth: 1,
-            },
-          ],
-        },
-      });
       document.addEventListener("DOMContentLoaded", function () {
         // Select all flash messages
         const flashMessages = document.querySelectorAll(".flash");
