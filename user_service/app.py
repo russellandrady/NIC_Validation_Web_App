@@ -10,6 +10,7 @@ from flask_mysqldb import MySQL
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 import re
 
 load_dotenv()
@@ -335,28 +336,46 @@ def download_excel():
 def download_pdf():
     try:
         if 'details' not in session or not session['details'] or 'selectedGender' not in session:
-            flash('No data available','error')
+            flash('No data available', 'error')
             return redirect(url_for('dashboard'))
 
         selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if  selected_gender == 'All' or detail[1] == selected_gender]
+        details = [detail for detail in session['details'] if selected_gender == 'All' or detail[1] == selected_gender]
         filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
+
         output = io.BytesIO()
         c = canvas.Canvas(output, pagesize=letter)
         width, height = letter
         y = height - 40
 
-        c.drawString(30, y, "NIC")
-        c.drawString(130, y, "DOB")
-        c.drawString(230, y, "Gender")
-        c.drawString(330, y, "Age")
+        # Set up column widths (adjust these values to better distribute the table)
+        col_widths = [100, 235, 370, 505]
 
-        for detail in filtered_details:
+        # Header
+        c.setFillColor(colors.HexColor("#84df87"))  # Header background color
+        c.rect(30, y - 10, 550, 20, fill=True, stroke=False)
+        c.setFillColor(colors.black)
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(col_widths[0], y, "NIC")
+        c.drawString(col_widths[1], y, "DOB")
+        c.drawString(col_widths[2], y, "Gender")
+        c.drawString(col_widths[3], y, "Age")
+
+        # Rows
+        c.setFont("Helvetica", 10)
+        for index, detail in enumerate(filtered_details):
             y -= 20
-            c.drawString(30, y, str(detail[0]))
-            c.drawString(130, y, str(detail[1]))
-            c.drawString(230, y, str(detail[2]))
-            c.drawString(330, y, str(detail[3]))
+
+            # Alternate row colors
+            if index % 2 == 0:
+                c.setFillColor(colors.HexColor("#f8f9fa"))  # Light grey background
+                c.rect(30, y - 10, 550, 20, fill=True, stroke=False)
+            c.setFillColor(colors.black)
+
+            c.drawString(col_widths[0], y, str(detail[0]))
+            c.drawString(col_widths[1], y, str(detail[1]))
+            c.drawString(col_widths[2], y, str(detail[2]))
+            c.drawString(col_widths[3], y, str(detail[3]))
 
         c.save()
         output.seek(0)
@@ -365,10 +384,10 @@ def download_pdf():
         response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.pdf"
         response.headers["Content-Type"] = "application/pdf"
         return response
+
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
-    
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():

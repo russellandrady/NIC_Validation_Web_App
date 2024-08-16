@@ -64,19 +64,19 @@
             <div class="card-body">
               <div class="row justify-content-center">
                 <div class="col text-center">
-                  <a
-                    href="{{url_for('setSelectedGender',gender='Male')}}"
+                  <p
+                    
                     id="maleCount"
-                    class="gender {% if session['selectedGender'] == 'Male' %}green{% endif %}"
-                    >Male: 0</a
+                    class="gender"
+                    >Male: 0</p
                   >
                 </div>
                 <div class="col text-center">
-                  <a
-                    href="{{url_for('setSelectedGender',gender='Female')}}"
+                  <p
+                    
                     id="femaleCount"
-                    class="gender {% if session['selectedGender'] == 'Female' %}green{% endif %}"
-                    >Female: 0</a
+                    class="gender"
+                    >Female: 0</p
                   >
                 </div>
               </div>
@@ -93,16 +93,16 @@
 
                   <div class="col-md-6" style="margin-top: 10px;">
                     <div id="statistics" class="container statistics-container">
-                      <h5><p id="averageAge"></p></h5>
+                      <h6><p id="averageAge"></p></h6>
                     </div>
                     <div id="statistics" class="container statistics-container">
-                      <h5><p id="oldestPerson"></p></h5>
+                      <h6><p id="oldestPerson"></p></h6>
                     </div>
                     <div id="statistics" class="container statistics-container">
-                      <h5><p id="youngestPerson"></p></h5>
+                      <h6><p id="youngestPerson"></p></h6>
                     </div>
                     <div id="statistics" class="container statistics-container">
-                      <h5><p id="genderRatio"></p></h5>
+                      <h6><p id="genderRatio"></p></h6>
                     </div>
                   </div>
                 </div>

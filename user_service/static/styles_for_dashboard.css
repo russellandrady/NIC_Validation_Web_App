@@ -115,7 +115,7 @@ color: #ff3838;
   }
   
   .navbar-custom .nav-link:hover {
-    color: #d9d9d9;
+    color: #000000;
   }
   
   .navbar-custom .navbar-toggler-icon {
@@ -135,17 +135,19 @@ color: #ff3838;
   border: #000000 1px solid; /* Dark grey border */
   border-radius: 10px; /* Rounded corners */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  margin-bottom: 5px;
 }
 
 
 
 .statistics-container p {
-  font-size: 16px;
-  margin-bottom: 10px;
+  
+  margin-bottom: 5px;
 }
   
-  .statistics-container h5 {
-    font-weight: bold;
+  .statistics-container h6 {
+    font-size: 20px;
+    margin-top: 5px;
     color: #000000;
     
   }
@@ -159,7 +161,7 @@ color: #ff3838;
 }
 .flash {
     position: fixed;
-    top: 8px;
+    top: 64px;
     left: 50%;
     transform: translateX(-50%);
     padding: 10px;
