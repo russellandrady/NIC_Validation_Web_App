@@ -47,7 +47,7 @@
                 <a class="nav-link" href="{{url_for('dashboard')}}">Uploads</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{{url_for('dashboard')}}">Charts</a>
+                <a class="nav-link" href="{{url_for('charts')}}">Charts</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
@@ -60,50 +60,45 @@
     <div class="container container-box">
       <div class="row justify-content-center">
         <div class="col">
-          <div class="card" style="margin-top: -20px; border: none">
-            <div class="card-body">
+          <div class="card" style="margin-top: -20px; border: none; ">
+                        <div class="card-body stats-card">
               <div class="row justify-content-center">
                 <div class="col text-center">
-                  <p
-                    
-                    id="maleCount"
-                    class="gender"
-                    >Male: 0</p
-                  >
+                  <h6 class="gender">Male</h6>
+                  <h2 id="maleCount" class="theData">0</h2>
                 </div>
                 <div class="col text-center">
-                  <p
-                    
-                    id="femaleCount"
-                    class="gender"
-                    >Female: 0</p
-                  >
+                  <h6 class="gender">Female</h6>
+                  <h2 id="femaleCount" class="theData">0</h2>
+                </div>
+              </div>
+              <div class="row justify-content-center">
+                <div class="col text-center">
+                  <h6 class="gender">Average Age</h6>
+                  <h2 id="averageAge" class="theData">0</h2>
+                </div>
+                <div class="col text-center">
+                  <h6 class="gender">Oldest Person</h6>
+                  <h2 id="oldestPerson" class="theData">N/A</h2>
+                  <p id="oldestPersonAge"  style="font-size: 12px;">N/A</p>
+                </div>
+                <div class="col text-center">
+                  <h6 class="gender">Youngest Person</h6>
+                  <h2 id="youngestPerson" class="theData">N/A</h2>
+                  <p id="youngestPersonAge"  style="font-size: 12px;">N/A</p>
                 </div>
               </div>
             </div>
           </div>
           <div class="card" style="margin-bottom: 20px; margin-top: -20px">
             <div class="card-body">
-              <canvas id="barChart"></canvas>
               <div class="justify-content-center">
                 <div class="row">
                   <div class="col-md-6">
-                    <canvas id="pieChart" style="margin-top: 60px"></canvas>
+                    <canvas id="barChart" style="margin-top: 120px"></canvas>
                   </div>
-
-                  <div class="col-md-6" style="margin-top: 10px;">
-                    <div id="statistics" class="container statistics-container">
-                      <h6><p id="averageAge"></p></h6>
-                    </div>
-                    <div id="statistics" class="container statistics-container">
-                      <h6><p id="oldestPerson"></p></h6>
-                    </div>
-                    <div id="statistics" class="container statistics-container">
-                      <h6><p id="youngestPerson"></p></h6>
-                    </div>
-                    <div id="statistics" class="container statistics-container">
-                      <h6><p id="genderRatio"></p></h6>
-                    </div>
+                  <div class="col-md-6">
+                    <canvas id="pieChart"></canvas>
                   </div>
                 </div>
               </div>
@@ -156,10 +151,10 @@
         });
         document.getElementById(
           "maleCount"
-        ).textContent = `Male: ${genderCounts.male}`;
+        ).textContent = `${genderCounts.male}`;
         document.getElementById(
           "femaleCount"
-        ).textContent = `Female: ${genderCounts.female}`;
+        ).textContent = `${genderCounts.female}`;
 
         return genderCounts;
       }
@@ -178,14 +173,14 @@
             {
               label: "Male",
               data: Object.values(barChartData).map((group) => group.male),
-              backgroundColor: "rgba(217, 217, 217, 0.2)",
+              backgroundColor: "rgba(217, 217, 217, 1)",
               borderColor: "rgba(0, 0, 0, 1)",
               borderWidth: 1,
             },
             {
               label: "Female",
               data: Object.values(barChartData).map((group) => group.female),
-              backgroundColor: "rgba(115, 189, 119, 0.2)",
+              backgroundColor: "rgba(115, 189, 119, 1)",
               borderColor: "rgba(0 ,0 ,0 , 1)",
               borderWidth: 1,
             },
@@ -213,8 +208,8 @@
             {
               data: [pieChartData.male, pieChartData.female],
               backgroundColor: [
-                "rgba(217, 217, 217, 0.2)",
-                "rgba(115, 189, 119, 0.2)",
+                "rgba(217, 217, 217, 1)",
+                "rgba(115, 189, 119, 1)",
               ],
               borderColor: ["rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)"],
               borderWidth: 1,
@@ -267,15 +262,12 @@
         });
 
         const averageAge =
-          validCount > 0 ? (totalAge / validCount).toFixed(2) : "N/A";
-        const genderRatio =
-          femaleCount > 0 ? (maleCount / femaleCount).toFixed(2) : "N/A";
+          validCount > 0 ? (totalAge / validCount).toFixed(0) : "N/A";
 
         return {
           averageAge,
           oldest,
           youngest,
-          genderRatio,
         };
       }
 
@@ -285,16 +277,19 @@
       // Display statistics
       document.getElementById(
         "averageAge"
-      ).textContent = `Average Age: ${stats.averageAge}`;
+      ).textContent = `${stats.averageAge}`;
       document.getElementById("oldestPerson").textContent = stats.oldest
-        ? `Oldest Person: ${stats.oldest[0]} (${stats.oldest[3]} years old)`
-        : "Oldest Person: N/A";
+        ? `${stats.oldest[0]}`
+        : "N/A";
       document.getElementById("youngestPerson").textContent = stats.youngest
-        ? `Youngest Person: ${stats.youngest[0]} (${stats.youngest[3]} years old)`
-        : "Youngest Person: N/A";
-      document.getElementById(
-        "genderRatio"
-      ).textContent = `Gender Ratio (Male/Female): ${stats.genderRatio}`;
+        ? `${stats.youngest[0]}`
+        : "N/A";
+        document.getElementById("oldestPersonAge").textContent = stats.oldest
+        ? `-${stats.oldest[3]} years old-`
+        : "N/A";
+      document.getElementById("youngestPersonAge").textContent = stats.youngest
+        ? `-${stats.youngest[3]} years old-`
+        : "N/A";
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

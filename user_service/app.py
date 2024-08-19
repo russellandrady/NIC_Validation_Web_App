@@ -60,9 +60,11 @@ def mainFunc(id):
         middle = int(id[2:5])
         gender, middle = determineGender(middle)
         if middle < 0 or middle > 366:
-            return ["invalid nic", "invalid nic", 0]
+            return ["invalid nic", "invalid mid number", 0]
         month, day, middle = calculateMonthDate(middle)
         age = date.today().year - year
+        if age < 15:
+            return ["invalid nic", "too young", 0]
         dob = f"{day}/{month}/{year}"
         return [gender, dob, age]
     elif re.fullmatch(r'\d{12}', id):
@@ -70,13 +72,15 @@ def mainFunc(id):
         middle = int(id[4:7])
         gender, middle = determineGender(middle)
         if middle < 0 or middle > 366:
-            return ["invalid nic", "invalid nic", 0]
+            return ["invalid nic", "invalid mid number", 0]
         month, day, middle = calculateMonthDate(middle)
         age = date.today().year - year
+        if age < 15:
+            return ["invalid nic", "too young", 0]
         dob = f"{day}/{month}/{year}"
         return [gender, dob, age]
     else:
-        return ["invalid nic", "invalid nic", 0]
+        return ["invalid nic", "invalid structure", 0]
     
 # def count_users(user_id):
 #     cur = mysql.connection.cursor()

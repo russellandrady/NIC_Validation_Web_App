@@ -16,13 +16,23 @@ body {
     border-color: #d9d9d9;
 }
 .bton-primary {
-    background-color: #73bd77;
-    border-color: #73bd77;
+    background-color: #6c757d;
+    border-color: #6c757d;
     color: white;
 }
 .bton-primary:hover {
-    background-color: #4CAF50;
-    border-color: #4CAF50;
+    background-color: #ffffff;
+    border-color: #6c757d;
+    color: #6c757d;
+}
+.bton-secondary {
+    background-color: #ffffff;
+    border-color: #6c757d;
+    color: #6c757d;
+}
+.bton-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
     color: white;
 }
 .card {
@@ -30,6 +40,8 @@ body {
     border-image: linear-gradient(to bottom,
         rgba(0, 0, 0, 0) 50%, 
         rgb(0, 0, 0) 100%) 1;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid #ddd;
 }
 .card-custom {
     border: 2px solid transparent;
@@ -38,11 +50,11 @@ body {
 }
 .card-header {
     border:none;
-    background: #73bd77;
+    background: #f8f9fa;
 }
 h5{
     margin-top: 5px;
-    color: #ffffff;
+    color: #73bd77;
     font-size: 20px;
     font-weight: 550;
 }
@@ -105,7 +117,7 @@ color: #ff3838;
     color: #4CAF50;
 }
 .navbar-custom {
-    background-color: #73bd77;/* Adjust the height as needed */
+    background-color: #000000;/* Adjust the height as needed */
   }
   
   .navbar-custom .navbar-brand,
@@ -115,7 +127,7 @@ color: #ff3838;
   }
   
   .navbar-custom .nav-link:hover {
-    color: #000000;
+    color: #73bd77;
   }
   
   .navbar-custom .navbar-toggler-icon {
@@ -129,30 +141,39 @@ color: #ff3838;
     color: white;
   }
   
-  .statistics-container {
-  background-color: #f8f9fa; /* Light grey background */
-  padding: 20px;
-  border: #000000 1px solid; /* Dark grey border */
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  margin-bottom: 5px;
-}
-
-
-
-.statistics-container p {
-  
-  margin-bottom: 5px;
-}
-  
-  .statistics-container h6 {
-    font-size: 20px;
+  h6 {
+    font-size: 18px;
     margin-top: 5px;
     color: #000000;
     
   }
-  
-  
+  .stats-card {
+  background-color: #f8f9fa; /* Light background color */
+  padding: 20px; /* Padding inside the card */
+  margin-bottom: -20px; /* Space below the card */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid #ddd; /* Light border */
+}
+
+.stats-card .row {
+  margin-bottom: 10px; /* Space between rows */
+  border-bottom: 1px solid #ddd; /* Line between rows */
+  padding-bottom: 10px; /* Padding below the row */
+}
+
+.stats-card .row:last-child {
+  border-bottom: none; /* Remove border from the last row */
+}
+
+.stats-card .gender {
+  font-size: 1.0em; /* Larger font size */
+  color: #333; /* Dark text color */
+}
+.stats-card .theData {
+  color: #4CAF50; /* Dark text color */
+}
+   
 .flash {
     padding: 10px;
     margin-bottom: 10px;

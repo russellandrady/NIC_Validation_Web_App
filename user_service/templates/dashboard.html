@@ -44,9 +44,7 @@
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
               <li class="nav-item">
-                <a class="nav-link" href="{{url_for('dashboard')}}"
-                  >Uploads</a
-                >
+                <a class="nav-link" href="{{url_for('dashboard')}}">Uploads</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{{url_for('charts')}}">Charts</a>
@@ -73,15 +71,34 @@
                 enctype="multipart/form-data"
               >
                 <div class="form-group">
-                  <input
-                    type="file"
-                    class="form-control-file"
-                    id="fileUpload"
-                    name="files"
-                    multiple
-                    accept=".csv"
-                    required
-                  />
+                  <div
+                    id="drop-area"
+                    style="
+                      border: 2px dashed #ccc;
+                      padding: 20px;
+                      text-align: center;
+                    "
+                  >
+                    <p>Drag and drop files here</p>
+                    <input
+                      type="file"
+                      class="form-control-file"
+                      id="fileUpload"
+                      name="files"
+                      multiple
+                      accept=".csv"
+                      required
+                      style="display: none"
+                    />
+                    <button
+                      type="button"
+                      class="btn bton-secondary"
+                      onclick="document.getElementById('fileUpload').click();"
+                    >
+                      Browse Files
+                    </button>
+                    <p id="file-count" style="margin-top: 10px"></p>
+                  </div>
                 </div>
                 <button type="submit" class="btn bton-primary btn-block">
                   Upload
@@ -90,8 +107,8 @@
             </div>
           </div>
 
-          <div class="card" style="margin-top: -20px">
-            <div class="card-body">
+          <div class="card" style="margin-top: -20px; border-top: none; border-bottom:none ;">
+            <div class="card-body" >
               <div class="row justify-content-center">
                 <div class="col text-center">
                   <a
@@ -214,6 +231,53 @@
           }, 2000); // 2000 milliseconds = 2 seconds
         });
       });
+      const dropArea = document.getElementById('drop-area');
+  const fileInput = document.getElementById('fileUpload');
+  const fileCount = document.getElementById('file-count');
+
+  // Prevent default drag behaviors
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  // Highlight drop area when item is dragged over it
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+  });
+
+  // Handle dropped files
+  dropArea.addEventListener('drop', handleDrop, false);
+
+  function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    handleFiles(files);
+  }
+
+  function handleFiles(files) {
+    fileInput.files = files;
+    updateFileCount(files.length);
+  }
+
+  // Update file count when files are selected through the file input
+  fileInput.addEventListener('change', () => {
+    updateFileCount(fileInput.files.length);
+  });
+
+  function updateFileCount(count) {
+    fileCount.textContent = `${count} file(s) selected`;
+  }
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
