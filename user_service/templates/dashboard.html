@@ -175,13 +175,13 @@
             <div class="card-body">
               <div class="row justify-content-center">
                 <div class="col text-center">
-                  <a href="{{url_for('download_pdf')}}">PDF</a>
+                  <a href="#" onclick="downloadFilteredData()">PDF</a>
                 </div>
                 <div class="col text-center">
-                  <a href="{{url_for('download_excel')}}">EXCEL</a>
+                  <a href="#" onclick="downloadFilteredExcel()">EXCEL</a>
                 </div>
                 <div class="col text-center">
-                  <a href="{{url_for('download_csv')}}">CSV</a>
+                  <a href="#" onclick="downloadFilteredCSV()">CSV</a>
                 </div>
               </div>
             </div>
@@ -371,6 +371,118 @@
           tableBody.appendChild(noDataRow);
         }
       }
+      function downloadFilteredData() {
+  const rows = document.querySelectorAll('table tbody tr');
+  const details = [];
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length > 0) {
+      details.push({
+        nic: cells[0].textContent.trim(),
+        dob: cells[1].textContent.trim(),
+        gender: cells[2].textContent.trim(),
+        age: cells[3].textContent.trim()
+      });
+    }
+  });
+
+  fetch('/download/pdf', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ details: details })
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'user_data_filtered.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+  
+}
+function downloadFilteredExcel() {
+  const rows = document.querySelectorAll('table tbody tr');
+  const details = [];
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length > 0) {
+      details.push({
+        nic: cells[0].textContent.trim(),
+        dob: cells[1].textContent.trim(),
+        gender: cells[2].textContent.trim(),
+        age: cells[3].textContent.trim()
+      });
+    }
+  });
+
+  fetch('/download/excel', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ details: details })
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'user_data_filtered.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
+function downloadFilteredCSV() {
+  const rows = document.querySelectorAll('table tbody tr');
+  const details = [];
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length > 0) {
+      details.push({
+        nic: cells[0].textContent.trim(),
+        dob: cells[1].textContent.trim(),
+        gender: cells[2].textContent.trim(),
+        age: cells[3].textContent.trim()
+      });
+    }
+  });
+
+  fetch('/download/csv', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ details: details })
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'user_data_filtered.csv';
+    document.body.append(a);
+    a.click();
+    a.remove();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

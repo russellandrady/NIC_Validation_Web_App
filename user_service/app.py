@@ -289,38 +289,37 @@ def delete_row():
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
 
-@app.route('/download/csv', methods=['GET'])
+@app.route('/download/csv', methods=['POST'])
 def download_csv():
     try:
-        if 'details' not in session or not session['details'] or 'selectedGender' not in session:
-            flash('No data available','error')
+        data = request.json
+        if not data or 'details' not in data:
+            flash('No data available', 'error')
             return redirect(url_for('dashboard'))
-            
 
-        selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if selected_gender == 'All' or detail[1] == selected_gender]
-        filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
-        df = pd.DataFrame(filtered_details, columns=['NIC', 'DOB', 'Gender', 'Age'])
+        details = data['details']
+        filtered_details = [(detail['nic'], detail['dob'], detail['gender'], detail['age']) for detail in details]
+        df = pd.DataFrame(filtered_details, columns=['NIC', 'Gender', 'DOB', 'Age'])
 
         response = make_response(df.to_csv(index=False))
-        response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.csv"
+        response.headers["Content-Disposition"] = "attachment; filename=user_data_filtered.csv"
         response.headers["Content-Type"] = "text/csv"
         return response
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
 
-@app.route('/download/excel', methods=['GET'])
+@app.route('/download/excel', methods=['POST'])
 def download_excel():
     try:
-        if 'details' not in session or not session['details'] or 'selectedGender' not in session:
-            flash('No data available','error')
+        data = request.json
+        if not data or 'details' not in data:
+            flash('No data available', 'error')
             return redirect(url_for('dashboard'))
 
-        selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if selected_gender == 'All' or detail[1] == selected_gender]
-        filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
-        df = pd.DataFrame(filtered_details, columns=['NIC', 'DOB', 'Gender', 'Age'])
+        details = data['details']
+        filtered_details = [(detail['nic'], detail['dob'], detail['gender'], detail['age']) for detail in details]
+        df = pd.DataFrame(filtered_details, columns=['NIC', 'Gender', 'DOB', 'Age'])
 
         output = io.BytesIO()
         writer = pd.ExcelWriter(output, engine='xlsxwriter')
@@ -329,23 +328,23 @@ def download_excel():
         output.seek(0)
 
         response = make_response(output.read())
-        response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.xlsx"
+        response.headers["Content-Disposition"] = "attachment; filename=user_data_filtered.xlsx"
         response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         return response
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
 
-@app.route('/download/pdf', methods=['GET'])
+@app.route('/download/pdf', methods=['POST'])
 def download_pdf():
     try:
-        if 'details' not in session or not session['details'] or 'selectedGender' not in session:
+        data = request.json
+        if not data or 'details' not in data:
             flash('No data available', 'error')
             return redirect(url_for('dashboard'))
 
-        selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if selected_gender == 'All' or detail[1] == selected_gender]
-        filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
+        details = data['details']
+        filtered_details = [(detail['nic'], detail['dob'], detail['gender'], detail['age']) for detail in details]
 
         output = io.BytesIO()
         c = canvas.Canvas(output, pagesize=letter)
@@ -361,8 +360,8 @@ def download_pdf():
         c.setFillColor(colors.black)
         c.setFont("Helvetica-Bold", 10)
         c.drawString(col_widths[0], y, "NIC")
-        c.drawString(col_widths[1], y, "DOB")
-        c.drawString(col_widths[2], y, "Gender")
+        c.drawString(col_widths[1], y, "Gender")
+        c.drawString(col_widths[2], y, "DOB")
         c.drawString(col_widths[3], y, "Age")
 
         # Rows
@@ -385,7 +384,7 @@ def download_pdf():
         output.seek(0)
 
         response = make_response(output.read())
-        response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.pdf"
+        response.headers["Content-Disposition"] = "attachment; filename=user_data_filtered.pdf"
         response.headers["Content-Type"] = "application/pdf"
         return response
 
