@@ -65,9 +65,9 @@
           <div class="form-group">
             <form class="form-inline my-2 my-lg-0" onsubmit="filterData(event)">
               <input
-                class="form-control mr-sm-2"
+                class="form-control mr-sm-2 shadow-form"
                 type="search"
-                placeholder="Ex: 10/10/2000"
+                placeholder="Search..."
                 aria-label="Search"
                 id="searchInput"
               />
@@ -76,7 +76,7 @@
               </button>
               <button
                 class="btn bton-secondary my-2 my-sm-0"
-                style="margin-left: 2px"
+                style="margin-left: 5px"
                 type="button"
                 onclick="resetData()"
               >
@@ -120,7 +120,7 @@
                     />
                     <button
                       type="button"
-                      class="btn bton-secondary"
+                      class="btn bton-third"
                       onclick="document.getElementById('fileUpload').click();"
                     >
                       Browse Files
@@ -186,7 +186,7 @@
             </div>
           </div>
           <div class="card-custom">
-            <div class="card-body">
+            <div class="card-body" style="background-color: #f8f9fa;">
               <div class="row justify-content-center">
                 <div class="col text-center">
                   <a href="#" onclick="downloadFilteredData()">PDF</a>

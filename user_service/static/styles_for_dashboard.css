@@ -21,9 +21,9 @@ body {
     color: white;
 }
 .bton-primary:hover {
-    background-color: #ffffff;
-    border-color: #6c757d;
-    color: #6c757d;
+    background-color: #73bd77;
+    border-color: #73bd77;
+    color: white;
 }
 .bton-secondary {
     background-color: #ffffff;
@@ -31,8 +31,18 @@ body {
     color: #6c757d;
 }
 .bton-secondary:hover {
-    background-color: #6c757d;
+    background-color: #fa5b53;
+    border-color: #fa5b53;
+    color: white;
+}
+.bton-third {
+    background-color: #ffffff;
     border-color: #6c757d;
+    color: #6c757d;
+}
+.bton-third:hover {
+    background-color: #d9d9d9;
+    border-color: #d9d9d9;
     color: white;
 }
 .card {
@@ -111,7 +121,7 @@ a:hover{
 }
 
 .delete-url:hover{
-color: #ff3838;
+color: #fa5b53;
 }
 .green{
     color: #4CAF50;
@@ -178,6 +188,12 @@ color: #ff3838;
     color: #4CAF50;
     border-radius: 5px;
 }
+.shadow-form {
+    border-radius: 5px;
+    border-width: 2px;
+    background-color: #f8f9fa;
+    border-color: #000000;
+  }
    
 .flash {
     padding: 10px;
