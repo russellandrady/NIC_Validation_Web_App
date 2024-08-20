@@ -60,13 +60,10 @@
     </div>
 
     <div class="container container-box">
-            <div class="row">
+      <div class="row">
         <div class="col d-flex justify-content-center align-items-center">
           <div class="form-group">
-            <form
-              class="form-inline my-2 my-lg-0"
-              onsubmit="filterData(event)"
-            >
+            <form class="form-inline my-2 my-lg-0" onsubmit="filterData(event)">
               <input
                 class="form-control mr-sm-2"
                 type="search"
@@ -154,6 +151,22 @@
                 </div>
                 <div class="col text-center">
                   <a
+                    href="{{url_for('setSelectedGender',gender='valid nic')}}"
+                    id="validCount"
+                    class="gender {% if session['selectedGender'] == 'valid nic' %}green{% endif %}"
+                    >Valid: 0</a
+                  >
+                </div>
+                <div class="col text-center">
+                  <a
+                    href="{{url_for('setSelectedGender',gender='invalid nic')}}"
+                    id="invalidCount"
+                    class="gender {% if session['selectedGender'] == 'invalid nic' %}green{% endif %}"
+                    >Invalid: 0</a
+                  >
+                </div>
+                <div class="col text-center">
+                  <a
                     href="{{url_for('setSelectedGender',gender='Male')}}"
                     id="maleCount"
                     class="gender {% if session['selectedGender'] == 'Male' %}green{% endif %}"
@@ -168,6 +181,7 @@
                     >Female: 0</a
                   >
                 </div>
+                
               </div>
             </div>
           </div>
@@ -201,7 +215,9 @@
                 </thead>
                 <tbody id="data-table">
                   {% for detail in session['details'] %} {% if
-                  session['selectedGender'] == 'All' or detail[1] ==
+                  session['selectedGender'] == 'All' or
+                  (session['selectedGender'] == 'valid nic' and (detail[1] ==
+                  'Male' or detail[1] == 'Female')) or detail[1] ==
                   session['selectedGender'] %}
                   <tr>
                     <td data-label="NIC">{{ detail[0] }}</td>
@@ -251,6 +267,12 @@
         document.getElementById(
           "femaleCount"
         ).textContent = `Female: ${genderCounts.female}`;
+        document.getElementById("invalidCount").textContent = `Invalid: ${
+          details.length - (genderCounts.male + genderCounts.female)
+        }`;
+        document.getElementById("validCount").textContent = `Valid: ${
+          genderCounts.male + genderCounts.female
+        }`;
 
         return genderCounts;
       }
@@ -372,117 +394,116 @@
         }
       }
       function downloadFilteredData() {
-  const rows = document.querySelectorAll('table tbody tr');
-  const details = [];
+        const rows = document.querySelectorAll("table tbody tr");
+        const details = [];
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length > 0) {
-      details.push({
-        nic: cells[0].textContent.trim(),
-        dob: cells[1].textContent.trim(),
-        gender: cells[2].textContent.trim(),
-        age: cells[3].textContent.trim()
-      });
-    }
-  });
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length > 0) {
+            details.push({
+              nic: cells[0].textContent.trim(),
+              dob: cells[1].textContent.trim(),
+              gender: cells[2].textContent.trim(),
+              age: cells[3].textContent.trim(),
+            });
+          }
+        });
 
-  fetch('/download/pdf', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ details: details })
-  })
-  .then(response => response.blob())
-  .then(blob => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'user_data_filtered.pdf';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
-  
-}
-function downloadFilteredExcel() {
-  const rows = document.querySelectorAll('table tbody tr');
-  const details = [];
+        fetch("/download/pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ details: details }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user_data_filtered.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+      function downloadFilteredExcel() {
+        const rows = document.querySelectorAll("table tbody tr");
+        const details = [];
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length > 0) {
-      details.push({
-        nic: cells[0].textContent.trim(),
-        dob: cells[1].textContent.trim(),
-        gender: cells[2].textContent.trim(),
-        age: cells[3].textContent.trim()
-      });
-    }
-  });
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length > 0) {
+            details.push({
+              nic: cells[0].textContent.trim(),
+              dob: cells[1].textContent.trim(),
+              gender: cells[2].textContent.trim(),
+              age: cells[3].textContent.trim(),
+            });
+          }
+        });
 
-  fetch('/download/excel', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ details: details })
-  })
-  .then(response => response.blob())
-  .then(blob => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'user_data_filtered.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
-}
-function downloadFilteredCSV() {
-  const rows = document.querySelectorAll('table tbody tr');
-  const details = [];
+        fetch("/download/excel", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ details: details }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user_data_filtered.xlsx";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+      function downloadFilteredCSV() {
+        const rows = document.querySelectorAll("table tbody tr");
+        const details = [];
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length > 0) {
-      details.push({
-        nic: cells[0].textContent.trim(),
-        dob: cells[1].textContent.trim(),
-        gender: cells[2].textContent.trim(),
-        age: cells[3].textContent.trim()
-      });
-    }
-  });
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length > 0) {
+            details.push({
+              nic: cells[0].textContent.trim(),
+              dob: cells[1].textContent.trim(),
+              gender: cells[2].textContent.trim(),
+              age: cells[3].textContent.trim(),
+            });
+          }
+        });
 
-  fetch('/download/csv', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ details: details })
-  })
-  .then(response => response.blob())
-  .then(blob => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'user_data_filtered.csv';
-    document.body.append(a);
-    a.click();
-    a.remove();
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
-}
+        fetch("/download/csv", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ details: details }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user_data_filtered.csv";
+            document.body.append(a);
+            a.click();
+            a.remove();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
