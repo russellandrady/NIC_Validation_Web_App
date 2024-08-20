@@ -60,22 +60,30 @@
     </div>
 
     <div class="container container-box">
-      <div class="row">
-        <div class="col">
+            <div class="row">
+        <div class="col d-flex justify-content-center align-items-center">
           <div class="form-group">
-            <form class="form-inline my-2 my-lg-0 ml-auto" onsubmit="searchContent(event)">
+            <form
+              class="form-inline my-2 my-lg-0"
+              onsubmit="filterData(event)"
+            >
               <input
                 class="form-control mr-sm-2"
                 type="search"
-                placeholder="Search"
+                placeholder="Ex: 10/10/2000"
                 aria-label="Search"
                 id="searchInput"
               />
+              <button class="btn bton-primary my-2 my-sm-0" type="submit">
+                Filter
+              </button>
               <button
-                class="btn bton-primary my-2 my-sm-0"
-                type="submit"
+                class="btn bton-secondary my-2 my-sm-0"
+                style="margin-left: 2px"
+                type="button"
+                onclick="resetData()"
               >
-                Search
+                Close
               </button>
             </form>
           </div>
@@ -314,58 +322,53 @@
         fileCount.textContent = `${count} file(s) selected`;
       }
 
-      function searchContent(e) {
-        e.preventDefault();
-        // Get the search query
+      let originalTableContent = "";
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        // Store the original table content when the page loads
+        const table = document.querySelector("table");
+        if (table) {
+          originalTableContent = table.innerHTML;
+        }
+        checkNoData();
+      });
+
+      function filterData(event) {
+        event.preventDefault();
         const query = document
           .getElementById("searchInput")
           .value.toLowerCase();
 
-        // Remove any previous highlights
-        document.querySelectorAll("span.highlight").forEach((span) => {
-          const parent = span.parentNode;
-          parent.replaceChild(document.createTextNode(span.textContent), span);
-          parent.normalize(); // Merge adjacent text nodes
-        });
-
-        // Get all elements that contain text
-        const elements = document.querySelectorAll(
-          "body *:not(script):not(style):not(nav):not(.navbar-custom)"
-        );
-
-        let firstMatchElement = null;
-
-        elements.forEach((el) => {
-          if (el.children.length === 0) {
-            // Only check leaf nodes
-            const text = el.textContent;
-            const lowerText = text.toLowerCase();
-
-            if (lowerText.includes(query) && query) {
-              // Split the text into parts and wrap the matching part with a <span>
-              const parts = text.split(new RegExp(`(${query})`, "gi"));
-              el.innerHTML = parts
-                .map((part) =>
-                  part.toLowerCase() === query
-                    ? `<span class="highlight">${part}</span>`
-                    : part
-                )
-                .join("");
-
-              // Set the first matching element for scrolling
-              if (!firstMatchElement) {
-                firstMatchElement = el.querySelector(".highlight");
-              }
-            }
+        const rows = document.querySelectorAll("table tbody tr");
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          if (!text.includes(query)) {
+            row.remove();
           }
+          checkNoData();
         });
+      }
 
-        // Scroll to the first match
-        if (firstMatchElement) {
-          firstMatchElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
+      function resetData() {
+        const table = document.querySelector("table");
+        if (table) {
+          table.innerHTML = originalTableContent;
+        }
+        document.getElementById("searchInput").value = "";
+        checkNoData();
+      }
+      function checkNoData() {
+        const rows = document.querySelectorAll("table tbody tr");
+        if (rows.length === 0) {
+          const tableBody = document.querySelector("table tbody");
+          const noDataRow = document.createElement("tr");
+          const noDataCell = document.createElement("td");
+          noDataCell.colSpan =
+            document.querySelectorAll("table thead th").length;
+          noDataCell.textContent = "-No data-";
+          noDataCell.style.textAlign = "center";
+          noDataRow.appendChild(noDataCell);
+          tableBody.appendChild(noDataRow);
         }
       }
     </script>
