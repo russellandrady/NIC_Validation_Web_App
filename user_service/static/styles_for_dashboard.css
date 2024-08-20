@@ -173,6 +173,11 @@ color: #ff3838;
 .stats-card .theData {
   color: #4CAF50; /* Dark text color */
 }
+.highlight {
+    background-color: #000000;
+    color: #4CAF50;
+    border-radius: 5px;
+}
    
 .flash {
     padding: 10px;

@@ -5,7 +5,7 @@ body {
 }
 h5 {
   margin-top: 5px;
-  color: #ffffff;
+  color: #73bd77;
   font-size: 20px;
   font-weight: 550;
 }
@@ -22,14 +22,14 @@ h5 {
   border-color: #d9d9d9;
 }
 .bton-primary {
+  background-color: #6c757d;
+  border-color: #6c757d;
   color: white;
-  background-color: #73bd77;
-  border-color: #73bd77;
 }
 .bton-primary:hover {
-  color: white;
-  background-color: #4caf50;
-  border-color: #4caf50;
+  background-color: #ffffff;
+  border-color: #6c757d;
+  color: #6c757d;
 }
 .card {
   border: 2px solid transparent;
@@ -42,11 +42,11 @@ h5 {
     
 }
 .card-header {
-  border: none;
-  background: #73bd77;
+  border:none;
+  background: #f8f9fa;
 }
 h3 {
-  color: #ffffff;
+  color: #73bd77;
   font-size: 30px;
   font-weight: 550;
 }
@@ -102,7 +102,7 @@ a:hover {
   cursor: pointer;
 }
 .navbar-custom {
-  background-color: #73bd77;/* Adjust the height as needed */
+  background-color: #000000;/* Adjust the height as needed */
 }
 
 .navbar-custom .navbar-brand,
@@ -112,7 +112,8 @@ a:hover {
 }
 
 .navbar-custom .nav-link:hover {
-  color: #000000;
+  color: #73bd77;
+  
 }
 
 .navbar-custom .navbar-toggler-icon {

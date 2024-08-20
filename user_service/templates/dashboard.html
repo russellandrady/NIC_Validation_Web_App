@@ -30,6 +30,7 @@
       <nav class="navbar navbar-expand-lg">
         <div class="container" style="margin-top: -1px">
           <a class="navbar-brand" href="#">Nic Validator</a>
+          
           <button
             class="navbar-toggler"
             type="button"
@@ -53,11 +54,35 @@
                 <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
               </li>
             </ul>
+            
           </div>
         </div>
       </nav>
     </div>
+    
     <div class="container container-box">
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+          <form class="form-inline my-2 my-lg-0 ml-auto">
+            <input
+              class="form-control mr-sm-2 "
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+              id="searchInput"
+            >
+            <button
+              class="btn bton-primary my-2 my-sm-0"
+              type="button"
+              onclick="searchContent()"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      </div>
+      </div>
       <div class="row justify-content-center">
         <div class="col">
           <div class="card">
@@ -154,6 +179,8 @@
           </div>
           <div class="table-container">
             <div class="table-responsive">
+          
+              <!-- Table -->
               <table class="table">
                 <thead>
                   <tr>
@@ -164,28 +191,25 @@
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {% for detail in session['details'] %} {% if
-                  session['selectedGender'] == 'All' or detail[1] ==
-                  session['selectedGender']%}
+                <tbody id="data-table">
+                  {% for detail in session['details'] %}
+                  {% if session['selectedGender'] == 'All' or detail[1] == session['selectedGender'] %}
                   <tr>
                     <td data-label="NIC">{{ detail[0] }}</td>
                     <td data-label="Gender">{{ detail[1] }}</td>
                     <td data-label="DOB">{{ detail[2] }}</td>
                     <td data-label="Age">{{ detail[3] }}</td>
                     <td>
-                      <a
-                        href="{{ url_for('delete_row', id=detail[4]) }}"
-                        class="delete-url"
-                        >Delete</a
-                      >
+                      <a href="{{ url_for('delete_row', id=detail[4]) }}" class="delete-url">Delete</a>
                     </td>
                   </tr>
-                  {% endif %} {% endfor %}
+                  {% endif %}
+                  {% endfor %}
                 </tbody>
               </table>
             </div>
           </div>
+          
         </div>
       </div>
     </div>
@@ -278,6 +302,68 @@
   function updateFileCount(count) {
     fileCount.textContent = `${count} file(s) selected`;
   }
+  function searchContent() {
+    // Get the search query
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    
+    // Get all the elements you want to search through
+    const elements = document.querySelectorAll('body *');
+    
+    // Loop through elements to find matches
+    for (let el of elements) {
+        if (el.textContent.toLowerCase().includes(query)) {
+            // Scroll to the element
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Stop after the first match
+            break;
+        }
+    }
+}
+
+  function searchContent() {
+    // Get the search query
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    
+    // Remove any previous highlights
+    document.querySelectorAll('span.highlight').forEach(span => {
+        const parent = span.parentNode;
+        parent.replaceChild(document.createTextNode(span.textContent), span);
+        parent.normalize(); // Merge adjacent text nodes
+    });
+
+    // Get all elements that contain text
+    const elements = document.querySelectorAll('body *:not(script):not(style):not(nav):not(.navbar-custom)');
+
+    let firstMatchElement = null;
+
+    elements.forEach(el => {
+        if (el.children.length === 0) { // Only check leaf nodes
+            const text = el.textContent;
+            const lowerText = text.toLowerCase();
+
+            if (lowerText.includes(query) && query) {
+                // Split the text into parts and wrap the matching part with a <span>
+                const parts = text.split(new RegExp(`(${query})`, 'gi'));
+                el.innerHTML = parts.map(part => 
+                    part.toLowerCase() === query ? `<span class="highlight">${part}</span>` : part
+                ).join('');
+
+                // Set the first matching element for scrolling
+                if (!firstMatchElement) {
+                    firstMatchElement = el.querySelector('.highlight');
+                }
+            }
+        }
+    });
+
+    // Scroll to the first match
+    if (firstMatchElement) {
+        firstMatchElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
