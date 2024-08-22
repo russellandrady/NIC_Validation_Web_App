@@ -137,6 +137,8 @@ def dashboard():
 @app.route('/charts', methods=['GET', 'POST'])
 def charts():
     try:
+        if 'male_count' or 'female_count' or 'age_groups' or 'oldest_person' or 'youngest_person' or 'average_age' not in session:
+            charts_data()
         if 'details' in session:
             return render_template('charts.html')
         return redirect("http://localhost:5000/")
@@ -421,6 +423,107 @@ def download_pdf():
 def close_modal():
     session['success_upload']=False
     return redirect(url_for('dashboard'))
+
+def charts_data():
+    try:
+        token = None
+        if 'token' in request.cookies:
+            token = request.cookies.get('token')
+        if token:
+            try:
+                decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                user_id = decoded['user_id']
+            except jwt.ExpiredSignatureError:
+                flash('User session expired','error')
+                return redirect("http://localhost:5000/")
+            except jwt.InvalidTokenError:
+                flash('Invalid token','error')
+                return redirect("http://localhost:5000/")
+        else:
+            flash('User cannot be validated','error')
+            return redirect("http://localhost:5000/")
+
+        cur = mysql.connection.cursor()
+
+        # Query to get the count of male and female users
+        cur.execute("SELECT COUNT(*) FROM nics WHERE gender = 'Male' AND user_id = %s", (user_id,))
+        male_count = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM nics WHERE gender = 'Female' AND user_id = %s", (user_id,))
+        female_count = cur.fetchone()[0]
+
+        # Query to get age distribution
+        age_groups = {
+            "0-20": {"male": 0, "female": 0},
+            "20-40": {"male": 0, "female": 0},
+            "40-60": {"male": 0, "female": 0},
+            "60-80": {"male": 0, "female": 0},
+            "80-100": {"male": 0, "female": 0},
+        }
+        
+        cur.execute("""
+            SELECT age, gender 
+            FROM nics 
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        rows = cur.fetchall()
+        for age, gender in rows:
+            if gender != 'invalid nic':
+                gender = gender.lower()
+                if age <= 20:
+                    age_groups["0-20"][gender] += 1
+                elif age <= 40:
+                    age_groups["20-40"][gender] += 1
+                elif age <= 60:
+                    age_groups["40-60"][gender] += 1
+                elif age <= 80:
+                    age_groups["60-80"][gender] += 1
+                elif age <= 100:
+                    age_groups["80-100"][gender] += 1
+
+        # Query to get the oldest and youngest person
+        cur.execute("""
+            SELECT nic, gender, dob, age 
+            FROM nics 
+            WHERE user_id = %s 
+            ORDER BY age DESC
+        """, (user_id,))
+        
+        oldest_person = cur.fetchone()
+        
+        cur.execute("""
+            SELECT nic, gender, dob, age 
+            FROM nics 
+            WHERE user_id = %s 
+            ORDER BY age ASC
+        """, (user_id,))
+        
+        youngest_person = cur.fetchone()
+
+        # Query to calculate average age
+        cur.execute("""
+            SELECT AVG(age) 
+            FROM nics 
+            WHERE user_id = %s AND gender IN ('Male', 'Female')
+        """, (user_id,))
+        
+        average_age = cur.fetchone()[0]
+
+        cur.close()
+
+        
+        session['male_count']=male_count
+        session['female_count']=female_count
+        session['age_groups']=age_groups
+        session['oldest_person']=oldest_person
+        session['youngest_person']=youngest_person
+        session['average_age']=average_age
+
+
+    except Exception as e:
+        flash(f"Error: {e}", 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():

@@ -111,11 +111,48 @@
     <script id="details-data" type="application/json">
       {{ session['details'] | tojson | safe }}
     </script>
+    <script id="male_count_data" type="application/json">
+      {{ session['male_count'] | tojson | safe }}
+    </script>
+    <script id="female_count_data" type="application/json">
+      {{ session['female_count'] | tojson | safe }}
+    </script>
+    <script id="age_groups_data" type="application/json">
+      {{ session['age_groups'] | tojson | safe }}
+    </script>
+    <script id="oldest_person_data" type="application/json">
+      {{ session['oldest_person'] | tojson | safe }}
+    </script>
+    <script id="youngest_person_data" type="application/json">
+      {{ session['youngest_person'] | tojson | safe }}
+    </script>
+    <script id="average_age_data" type="application/json">
+      {{ session['average_age'] | tojson | safe }}
+    </script>
+
 
     <script>
       // Parse JSON data
       const details = JSON.parse(
         document.getElementById("details-data").textContent
+      );
+      const maleCount = JSON.parse(
+        document.getElementById("male_count_data").textContent
+      );
+      const femaleCount = JSON.parse(
+        document.getElementById("female_count_data").textContent
+      );
+      const ageGroups = JSON.parse(
+        document.getElementById("age_groups_data").textContent
+      );
+      const oldestPerson = JSON.parse(
+        document.getElementById("oldest_person_data").textContent
+      );
+      const youngestPerson = JSON.parse(
+        document.getElementById("youngest_person_data").textContent
+      );
+      const averageAge = JSON.parse(
+        document.getElementById("average_age_data").textContent
       );
 
       // Function to process data for bar chart
