@@ -180,12 +180,12 @@
 
       // Function to process data for pie chart
       function processPieChartData(details) {
-        const genderCounts = { male: 0, female: 0 };
+        const genderCounts = { male: maleCount, female: femaleCount };
 
-        details.forEach((detail) => {
-          const gender = detail[1].toLowerCase();
-          genderCounts[gender]++;
-        });
+        // details.forEach((detail) => {
+        //   const gender = detail[1].toLowerCase();
+        //   genderCounts[gender]++;
+        // });
         document.getElementById(
           "maleCount"
         ).textContent = `${genderCounts.male}`;
@@ -197,7 +197,7 @@
       }
 
       // Process data
-      const barChartData = processBarChartData(details);
+      const barChartData = ageGroups;
       const pieChartData = processPieChartData(details);
 
       // Bar Chart
@@ -309,23 +309,21 @@
       }
 
       // Calculate statistics
-      const stats = calculateStatistics(details);
-
+            // Assuming oldest, youngest, and averageAge are already defined variables
+      
       // Display statistics
-      document.getElementById(
-        "averageAge"
-      ).textContent = `${stats.averageAge}`;
-      document.getElementById("oldestPerson").textContent = stats.oldest
-        ? `${stats.oldest[0]}`
+      document.getElementById("averageAge").textContent = `${Math.ceil(averageAge)}`;
+      document.getElementById("oldestPerson").textContent = oldestPerson
+        ? `${oldestPerson[0]}`
         : "N/A";
-      document.getElementById("youngestPerson").textContent = stats.youngest
-        ? `${stats.youngest[0]}`
+      document.getElementById("youngestPerson").textContent = youngestPerson
+        ? `${youngestPerson[0]}`
         : "N/A";
-        document.getElementById("oldestPersonAge").textContent = stats.oldest
-        ? `-${stats.oldest[3]} years old-`
+      document.getElementById("oldestPersonAge").textContent = oldestPerson
+        ? `-${oldestPerson[3]} years old-`
         : "N/A";
-      document.getElementById("youngestPersonAge").textContent = stats.youngest
-        ? `-${stats.youngest[3]} years old-`
+      document.getElementById("youngestPersonAge").textContent = youngestPerson
+        ? `-${youngestPerson[3]} years old-`
         : "N/A";
     </script>
 

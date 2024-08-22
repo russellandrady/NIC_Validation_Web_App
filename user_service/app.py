@@ -150,6 +150,7 @@ def charts():
 def home():
     try:
         # session['details']=[]
+        session.clear()
         token = None
         if 'token' in request.cookies:
             # token = request.cookies.get('token')
@@ -483,10 +484,10 @@ def charts_data():
                     age_groups["80-100"][gender] += 1
 
         # Query to get the oldest and youngest person
-        cur.execute("""
+                cur.execute("""
             SELECT nic, gender, dob, age 
             FROM nics 
-            WHERE user_id = %s 
+            WHERE user_id = %s AND gender != 'invalid nic'
             ORDER BY age DESC
         """, (user_id,))
         
@@ -495,7 +496,7 @@ def charts_data():
         cur.execute("""
             SELECT nic, gender, dob, age 
             FROM nics 
-            WHERE user_id = %s 
+            WHERE user_id = %s AND gender != 'invalid nic'
             ORDER BY age ASC
         """, (user_id,))
         
