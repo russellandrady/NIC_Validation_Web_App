@@ -105,17 +105,12 @@ def fetchData(user_id):
     cur.execute("SELECT nic, gender, dob, age, id FROM nics WHERE user_id = %s", (user_id,))
     if 'details' not in session:
         session['details'] = []
+    if 'temp_details' not in session:
+        session['temp_details'] = []
     
     current_details = cur.fetchall()
     
-    new_details = [detail for detail in current_details if detail not in session['details']]
-    
-    session['temp_details'] = new_details
-    
     session['details'] = current_details
-
-    session['temp_details'] = new_details
-    print(session['temp_details'])
     session['selectedGender'] = 'All'
     session['success_upload']=False
     cur.close()
@@ -261,6 +256,17 @@ def upload_files():
 
         flash('Files uploaded successfully','success')
         fetchData(user_id)
+
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT nic, gender, dob, age, id FROM temp_nics WHERE user_id = %s", (user_id,))
+        
+        session['temp_details'] = cur.fetchall()
+        
+        # Delete all rows where user_id matches the given user_id
+        cur.execute("DELETE FROM temp_nics WHERE user_id = %s", (user_id,))
+        
+        mysql.connection.commit()  # Commit the changes to the database
+        cur.close()
         session['success_upload']=True
         return redirect(url_for('dashboard'))
     except Exception as e:
@@ -379,7 +385,7 @@ def download_pdf():
         title = Paragraph("<b>NIC Validator</b>", getSampleStyleSheet()["Title"])
 
         # Data for table
-        table_data = [["NIC", "Gender", "DOB", "Age"]] + filtered_details
+        table_data = [["NIC", "DOB", "Gender", "Age"]] + filtered_details
 
         # Create table
         table = Table(table_data, colWidths=[2 * inch, 1.5 * inch, 2 * inch, 1.5 * inch])
