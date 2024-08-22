@@ -2,7 +2,13 @@
 
 body {
   font-family: "Poppins", sans-serif;
+  background-image: url('backgr2.jpg'); /* Path to your background image */
+    background-size: contain; /* Cover the entire background */
+    background-position: center; /* Center the background image */
+    background-attachment: fixed;
+    position: relative;
 }
+
 h5 {
   margin-top: 5px;
   color: #73bd77;
@@ -127,12 +133,18 @@ a:hover {
   color: white;
 }
 @keyframes slideInFromLeft {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
+	0% {
+		transform: translateX(-300px);
+		opacity: 0;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+
+/* Apply the animation to the desired elements */
+.card, .form-group {
+  animation: slideInFromLeft 0.3s ease-out;
 }

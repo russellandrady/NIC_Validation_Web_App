@@ -11,6 +11,9 @@ import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet
 import re
 
 load_dotenv()
@@ -100,8 +103,21 @@ def mainFunc(id):
 def fetchData(user_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT nic, gender, dob, age, id FROM nics WHERE user_id = %s", (user_id,))
-    session['details'] = cur.fetchall()
+    if 'details' not in session:
+        session['details'] = []
+    
+    current_details = cur.fetchall()
+    
+    new_details = [detail for detail in current_details if detail not in session['details']]
+    
+    session['temp_details'] = new_details
+    
+    session['details'] = current_details
+
+    session['temp_details'] = new_details
+    print(session['temp_details'])
     session['selectedGender'] = 'All'
+    session['success_upload']=False
     cur.close()
 
 @app.route('/setGender', methods=['GET', 'POST'])
@@ -192,6 +208,13 @@ def store_in_database(id, result, user_id):
         """, (str(id), user_id, result[1], result[0], result[2]))
         mysql.connection.commit()
         cur.close()
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO temp_nics (nic, user_id, dob, gender, age)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (str(id), user_id, result[1], result[0], result[2]))
+        mysql.connection.commit()
+        cur.close()
     except mysql.connector.Error as err:
         flash(f"Error: {err}", 'error')
     except Exception as e:
@@ -238,6 +261,7 @@ def upload_files():
 
         flash('Files uploaded successfully','success')
         fetchData(user_id)
+        session['success_upload']=True
         return redirect(url_for('dashboard'))
     except Exception as e:
         flash(f"Error: {e}", 'error')
@@ -250,6 +274,8 @@ def logout():
     # if response.status_code == 200:
         try:
             session.pop('details', None)
+            session.pop('temp_details', None)
+            session.pop('success_upload', None)
             resp = make_response(redirect("http://localhost:5000/"))
             resp.delete_cookie('token')
             return resp
@@ -344,43 +370,36 @@ def download_pdf():
             return redirect(url_for('dashboard'))
 
         details = data['details']
-        filtered_details = [(detail['nic'], detail['dob'], detail['gender'], detail['age']) for detail in details]
+        filtered_details = [(detail['nic'], detail['gender'], detail['dob'], detail['age']) for detail in details]
 
         output = io.BytesIO()
-        c = canvas.Canvas(output, pagesize=letter)
-        width, height = letter
-        y = height - 40
+        doc = SimpleDocTemplate(output, pagesize=letter)
 
-        # Set up column widths (adjust these values to better distribute the table)
-        col_widths = [100, 235, 370, 505]
+        # Title
+        title = Paragraph("<b>NIC Validator</b>", getSampleStyleSheet()["Title"])
 
-        # Header
-        c.setFillColor(colors.HexColor("#84df87"))  # Header background color
-        c.rect(30, y - 10, 550, 20, fill=True, stroke=False)
-        c.setFillColor(colors.black)
-        c.setFont("Helvetica-Bold", 10)
-        c.drawString(col_widths[0], y, "NIC")
-        c.drawString(col_widths[1], y, "Gender")
-        c.drawString(col_widths[2], y, "DOB")
-        c.drawString(col_widths[3], y, "Age")
+        # Data for table
+        table_data = [["NIC", "Gender", "DOB", "Age"]] + filtered_details
 
-        # Rows
-        c.setFont("Helvetica", 10)
-        for index, detail in enumerate(filtered_details):
-            y -= 20
+        # Create table
+        table = Table(table_data, colWidths=[2 * inch, 1.5 * inch, 2 * inch, 1.5 * inch])
 
-            # Alternate row colors
-            if index % 2 == 0:
-                c.setFillColor(colors.HexColor("#f8f9fa"))  # Light grey background
-                c.rect(30, y - 10, 550, 20, fill=True, stroke=False)
-            c.setFillColor(colors.black)
+        # Table style
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#84df87")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#f8f9fa")),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BOX', (0, 0), (-1, -1), 2, colors.black),
+        ]))
 
-            c.drawString(col_widths[0], y, str(detail[0]))
-            c.drawString(col_widths[1], y, str(detail[1]))
-            c.drawString(col_widths[2], y, str(detail[2]))
-            c.drawString(col_widths[3], y, str(detail[3]))
+        # Build PDF
+        elements = [title, table]
+        doc.build(elements)
 
-        c.save()
         output.seek(0)
 
         response = make_response(output.read())
@@ -391,6 +410,11 @@ def download_pdf():
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
+
+@app.route('/close_modal', methods=['POST'])
+def close_modal():
+    session['success_upload']=False
+    return redirect(url_for('dashboard'))
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():

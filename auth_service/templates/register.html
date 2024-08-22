@@ -48,6 +48,23 @@
               <li class="nav-item">
                 <a class="nav-link" href="{{url_for('register')}}">Register</a>
               </li>
+              {% if 'token' in request.cookies %}
+              <li class="nav-item">
+                <a class="nav-link" href="http://localhost:5001/uploads"
+                  >Upload</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="http://localhost:5001/charts"
+                  >Charts</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="http://localhost:5001/logout"
+                  >Logout</a
+                >
+              </li>
+              {% endif %}
             </ul>
           </div>
         </div>
