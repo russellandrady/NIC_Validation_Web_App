@@ -10,6 +10,11 @@ from flask_mysqldb import MySQL
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet
+import re
 
 load_dotenv()
 
@@ -53,30 +58,32 @@ def determineGender(middle):
 
 def mainFunc(id):
     global middle
-    if id[-1] == "V":
+    if re.fullmatch(r'\d{9}[vV]', id):
         year = int("19" + id[0:2])
         middle = int(id[2:5])
-        if (len(id) != 10):
-            return ["invalid nic", "invalid nic", 0]
         gender, middle = determineGender(middle)
         if middle < 0 or middle > 366:
-            return ["invalid nic", "invalid nic", 0]
+            return ["invalid nic", "invalid mid number", 0]
         month, day, middle = calculateMonthDate(middle)
         age = date.today().year - year
+        if age < 15:
+            return ["invalid nic", "too young", 0]
+        dob = f"{day}/{month}/{year}"
+        return [gender, dob, age]
+    elif re.fullmatch(r'\d{12}', id):
+        year = int(id[0:4])
+        middle = int(id[4:7])
+        gender, middle = determineGender(middle)
+        if middle < 0 or middle > 366:
+            return ["invalid nic", "invalid mid number", 0]
+        month, day, middle = calculateMonthDate(middle)
+        age = date.today().year - year
+        if age < 15:
+            return ["invalid nic", "too young", 0]
         dob = f"{day}/{month}/{year}"
         return [gender, dob, age]
     else:
-        year = int(id[0:4])
-        middle = int(id[4:7])
-        if (len(id) != 12):
-            return ["invalid nic", "invalid nic", 0]
-        gender, middle = determineGender(middle)
-        if middle < 0 or middle > 366:
-            return ["invalid nic", "invalid nic", 0]
-        month, day, middle = calculateMonthDate(middle)
-        age = date.today().year - year
-        dob = f"{day}/{month}/{year}"
-        return [gender, dob, age]
+        return ["invalid nic", "invalid structure", 0]
     
 # def count_users(user_id):
 #     cur = mysql.connection.cursor()
@@ -96,9 +103,73 @@ def mainFunc(id):
 def fetchData(user_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT nic, gender, dob, age, id FROM nics WHERE user_id = %s", (user_id,))
-    session['details'] = cur.fetchall()
+    if 'details' not in session:
+        session['details'] = []
+    if 'temp_details' not in session:
+        session['temp_details'] = []
+    
+    current_details = cur.fetchall()
+    
+    session['details'] = current_details
     session['selectedGender'] = 'All'
+    session['success_upload']=False
     cur.close()
+
+def fetchData2(user_id):
+    per_page = 20
+    cur = mysql.connection.cursor()
+    
+    # Calculate offset
+    offset = (session['page'] - 1) * per_page
+
+    # Fetch paginated data
+    cur.execute("SELECT nic, gender, dob, age, id FROM nics WHERE user_id = %s LIMIT %s OFFSET %s", 
+                (user_id, per_page, offset))
+
+    # Initialize session if not present
+    if 'details' not in session:
+        session['details'] = []
+    if 'temp_details' not in session:
+        session['temp_details'] = []
+    
+    current_details = cur.fetchall()
+
+    session['details'] = current_details
+    session['selectedGender'] = 'All'
+    session['success_upload'] = False
+    
+    # Get the total count of records
+    cur.execute("SELECT COUNT(*) FROM nics WHERE user_id = %s", (user_id,))
+    total_records = cur.fetchone()[0]
+    
+    # Calculate total pages
+    total_pages = (total_records + per_page - 1) // per_page
+
+    # Store total pages in session
+    session['total_pages'] = total_pages
+    
+    cur.close()
+
+@app.route('/setPage', methods=['GET'])
+def setPage():
+    try:
+        token = request.cookies.get('token')
+        session['page'] = int(request.args.get('page', 1))
+        try:
+                decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                user_id = decoded['user_id']
+        except jwt.ExpiredSignatureError:
+            flash('User session expired','error')
+            return redirect("http://localhost:5000/")
+        except jwt.InvalidTokenError:
+            flash('Invalid token','error')
+            return redirect("http://localhost:5000/")
+        fetchData(user_id)
+    except Exception as e:
+        flash(f"Error: {e}", 'error')
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard'))
+
 
 @app.route('/setGender', methods=['GET', 'POST'])
 def setSelectedGender():
@@ -109,7 +180,7 @@ def setSelectedGender():
         redirect(url_for('dashboard'))
     return redirect(url_for('dashboard'))
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/uploads', methods=['GET', 'POST'])
 def dashboard():
     try:
         if 'token' in request.cookies:
@@ -119,10 +190,33 @@ def dashboard():
         flash(f"Error: {e}", 'error')
         return redirect("http://localhost:5000/")
 
+@app.route('/charts', methods=['GET', 'POST'])
+def charts():
+    try:
+        if 'male_count' or 'female_count' or 'age_groups' or 'oldest_person' or 'youngest_person' or 'average_age' not in session:
+            charts_data()
+        if 'details' in session:
+            return render_template('charts.html')
+        return redirect("http://localhost:5000/")
+    except Exception as e:
+        flash(f"Error: {e}", 'error')
+        return redirect("http://localhost:5000/")
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     try:
         # session['details']=[]
+        session.clear()
+        session['total_pages'] = 1
+        session['temp_details']=[]
+        session['male_count']=0
+        session['female_count'] =0
+        session['age_groups']=[]
+        session['oldest_person']=[]
+        session['youngest_person']=[]
+        session['average_age']=0
+        session['temp_details']=[]
+        session['details']=[]
         token = None
         if 'token' in request.cookies:
             # token = request.cookies.get('token')
@@ -133,6 +227,7 @@ def home():
             try:
                 decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
                 user_id = decoded['user_id']
+                session['page']=1
                 fetchData(user_id)
                 resp = make_response(redirect(url_for('dashboard')))
                 resp.set_cookie('token', token, httponly=True, samesite='Strict')
@@ -160,6 +255,7 @@ def process_csv(file_path, user_id):
     os.remove(file_path)
     with ThreadPoolExecutor() as executor:
         for id in ids:
+            id = id.strip()
             executor.submit(process_id, id, user_id)
     
 
@@ -173,6 +269,13 @@ def store_in_database(id, result, user_id):
         cur = mysql.connection.cursor()
         cur.execute("""
             INSERT INTO nics (nic, user_id, dob, gender, age)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (str(id), user_id, result[1], result[0], result[2]))
+        mysql.connection.commit()
+        cur.close()
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO temp_nics (nic, user_id, dob, gender, age)
             VALUES (%s, %s, %s, %s, %s)
         """, (str(id), user_id, result[1], result[0], result[2]))
         mysql.connection.commit()
@@ -223,6 +326,18 @@ def upload_files():
 
         flash('Files uploaded successfully','success')
         fetchData(user_id)
+
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT nic, gender, dob, age, id FROM temp_nics WHERE user_id = %s", (user_id,))
+        
+        session['temp_details'] = cur.fetchall()
+        
+        # Delete all rows where user_id matches the given user_id
+        cur.execute("DELETE FROM temp_nics WHERE user_id = %s", (user_id,))
+        
+        mysql.connection.commit()  # Commit the changes to the database
+        cur.close()
+        session['success_upload']=True
         return redirect(url_for('dashboard'))
     except Exception as e:
         flash(f"Error: {e}", 'error')
@@ -235,6 +350,8 @@ def logout():
     # if response.status_code == 200:
         try:
             session.pop('details', None)
+            session.pop('temp_details', None)
+            session.pop('success_upload', None)
             resp = make_response(redirect("http://localhost:5000/"))
             resp.delete_cookie('token')
             return resp
@@ -274,38 +391,37 @@ def delete_row():
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
 
-@app.route('/download/csv', methods=['GET'])
+@app.route('/download/csv', methods=['POST'])
 def download_csv():
     try:
-        if 'details' not in session or not session['details'] or 'selectedGender' not in session:
-            flash('No data available','error')
+        data = request.json
+        if not data or 'details' not in data:
+            flash('No data available', 'error')
             return redirect(url_for('dashboard'))
-            
 
-        selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if selected_gender == 'All' or detail[1] == selected_gender]
-        filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
-        df = pd.DataFrame(filtered_details, columns=['NIC', 'DOB', 'Gender', 'Age'])
+        details = data['details']
+        filtered_details = [(detail['nic'], detail['dob'], detail['gender'], detail['age']) for detail in details]
+        df = pd.DataFrame(filtered_details, columns=['NIC', 'Gender', 'DOB', 'Age'])
 
         response = make_response(df.to_csv(index=False))
-        response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.csv"
+        response.headers["Content-Disposition"] = "attachment; filename=user_data_filtered.csv"
         response.headers["Content-Type"] = "text/csv"
         return response
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
 
-@app.route('/download/excel', methods=['GET'])
+@app.route('/download/excel', methods=['POST'])
 def download_excel():
     try:
-        if 'details' not in session or not session['details'] or 'selectedGender' not in session:
-            flash('No data available','error')
+        data = request.json
+        if not data or 'details' not in data:
+            flash('No data available', 'error')
             return redirect(url_for('dashboard'))
 
-        selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if selected_gender == 'All' or detail[1] == selected_gender]
-        filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
-        df = pd.DataFrame(filtered_details, columns=['NIC', 'DOB', 'Gender', 'Age'])
+        details = data['details']
+        filtered_details = [(detail['nic'], detail['dob'], detail['gender'], detail['age']) for detail in details]
+        df = pd.DataFrame(filtered_details, columns=['NIC', 'Gender', 'DOB', 'Age'])
 
         output = io.BytesIO()
         writer = pd.ExcelWriter(output, engine='xlsxwriter')
@@ -314,51 +430,168 @@ def download_excel():
         output.seek(0)
 
         response = make_response(output.read())
-        response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.xlsx"
+        response.headers["Content-Disposition"] = "attachment; filename=user_data_filtered.xlsx"
         response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         return response
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
 
-@app.route('/download/pdf', methods=['GET'])
+@app.route('/download/pdf', methods=['POST'])
 def download_pdf():
     try:
-        if 'details' not in session or not session['details'] or 'selectedGender' not in session:
-            flash('No data available','error')
+        data = request.json
+        if not data or 'details' not in data:
+            flash('No data available', 'error')
             return redirect(url_for('dashboard'))
 
-        selected_gender = session['selectedGender']
-        details = [detail for detail in session['details'] if  selected_gender == 'All' or detail[1] == selected_gender]
-        filtered_details = [(detail[0], detail[2], detail[1], detail[3]) for detail in details]
+        details = data['details']
+        filtered_details = [(detail['nic'], detail['gender'], detail['dob'], detail['age']) for detail in details]
+
         output = io.BytesIO()
-        c = canvas.Canvas(output, pagesize=letter)
-        width, height = letter
-        y = height - 40
+        doc = SimpleDocTemplate(output, pagesize=letter)
 
-        c.drawString(30, y, "NIC")
-        c.drawString(130, y, "DOB")
-        c.drawString(230, y, "Gender")
-        c.drawString(330, y, "Age")
+        # Title
+        title = Paragraph("<b>NIC Validator</b>", getSampleStyleSheet()["Title"])
 
-        for detail in filtered_details:
-            y -= 20
-            c.drawString(30, y, str(detail[0]))
-            c.drawString(130, y, str(detail[1]))
-            c.drawString(230, y, str(detail[2]))
-            c.drawString(330, y, str(detail[3]))
+        # Data for table
+        table_data = [["NIC", "DOB", "Gender", "Age"]] + filtered_details
 
-        c.save()
+        # Create table
+        table = Table(table_data, colWidths=[2 * inch, 1.5 * inch, 2 * inch, 1.5 * inch])
+
+        # Table style
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#84df87")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#f8f9fa")),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BOX', (0, 0), (-1, -1), 2, colors.black),
+        ]))
+
+        # Build PDF
+        elements = [title, table]
+        doc.build(elements)
+
         output.seek(0)
 
         response = make_response(output.read())
-        response.headers["Content-Disposition"] = f"attachment; filename=user_data_{selected_gender}.pdf"
+        response.headers["Content-Disposition"] = "attachment; filename=user_data_filtered.pdf"
         response.headers["Content-Type"] = "application/pdf"
         return response
+
     except Exception as e:
         flash(f"Error: {e}", 'error')
         return redirect(url_for('dashboard'))
-    
+
+@app.route('/close_modal', methods=['POST'])
+def close_modal():
+    session['success_upload']=False
+    return redirect(url_for('dashboard'))
+
+def charts_data():
+    try:
+        token = None
+        if 'token' in request.cookies:
+            token = request.cookies.get('token')
+        if token:
+            try:
+                decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                user_id = decoded['user_id']
+            except jwt.ExpiredSignatureError:
+                flash('User session expired','error')
+                return redirect("http://localhost:5000/")
+            except jwt.InvalidTokenError:
+                flash('Invalid token','error')
+                return redirect("http://localhost:5000/")
+        else:
+            flash('User cannot be validated','error')
+            return redirect("http://localhost:5000/")
+
+        cur = mysql.connection.cursor()
+
+        # Query to get the count of male and female users
+        cur.execute("SELECT COUNT(*) FROM nics WHERE gender = 'Male' AND user_id = %s", (user_id,))
+        male_count = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM nics WHERE gender = 'Female' AND user_id = %s", (user_id,))
+        female_count = cur.fetchone()[0]
+
+        # Query to get age distribution
+        age_groups = {
+            "0-20": {"male": 0, "female": 0},
+            "20-40": {"male": 0, "female": 0},
+            "40-60": {"male": 0, "female": 0},
+            "60-80": {"male": 0, "female": 0},
+            "80-100": {"male": 0, "female": 0},
+        }
+        
+        cur.execute("""
+            SELECT age, gender 
+            FROM nics 
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        rows = cur.fetchall()
+        for age, gender in rows:
+            if gender != 'invalid nic':
+                gender = gender.lower()
+                if age <= 20:
+                    age_groups["0-20"][gender] += 1
+                elif age <= 40:
+                    age_groups["20-40"][gender] += 1
+                elif age <= 60:
+                    age_groups["40-60"][gender] += 1
+                elif age <= 80:
+                    age_groups["60-80"][gender] += 1
+                elif age <= 100:
+                    age_groups["80-100"][gender] += 1
+
+        # Query to get the oldest and youngest person
+                cur.execute("""
+            SELECT nic, gender, dob, age 
+            FROM nics 
+            WHERE user_id = %s AND gender != 'invalid nic'
+            ORDER BY age DESC
+        """, (user_id,))
+        
+        oldest_person = cur.fetchone()
+        
+        cur.execute("""
+            SELECT nic, gender, dob, age 
+            FROM nics 
+            WHERE user_id = %s AND gender != 'invalid nic'
+            ORDER BY age ASC
+        """, (user_id,))
+        
+        youngest_person = cur.fetchone()
+
+        # Query to calculate average age
+        cur.execute("""
+            SELECT AVG(age) 
+            FROM nics 
+            WHERE user_id = %s AND gender IN ('Male', 'Female')
+        """, (user_id,))
+        
+        average_age = cur.fetchone()[0]
+
+        cur.close()
+
+        
+        session['male_count']=male_count
+        session['female_count']=female_count
+        session['age_groups']=age_groups
+        session['oldest_person']=oldest_person
+        session['youngest_person']=youngest_person
+        session['average_age']=average_age
+
+
+    except Exception as e:
+        flash(f"Error: {e}", 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():

@@ -13,6 +13,10 @@
       href="{{ url_for('static', filename='styles_for_dashboard.css') }}"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
   </head>
   <body>
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
@@ -26,7 +30,66 @@
       >
     </div>
     {% endfor %} {% endif %} {% endwith %}
+    <div class="navbar-custom">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container" style="margin-top: -1px">
+          <a class="navbar-brand" href="#">Nic Validator</a>
+
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('dashboard')}}">Uploads</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('charts')}}">Charts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+
     <div class="container container-box">
+      <div class="row">
+        <div class="col d-flex justify-content-center align-items-center">
+          <div class="form-group">
+            <form class="form-inline my-2 my-lg-0" onsubmit="filterData(event)">
+              <input
+                class="form-control mr-sm-2 shadow-form"
+                type="search"
+                placeholder="Search..."
+                aria-label="Search"
+                id="searchInput"
+              />
+              <button class="btn bton-primary my-2 my-sm-0" type="submit">
+                Filter
+              </button>
+              <button
+                class="btn bton-secondary my-2 my-sm-0"
+                style="margin-left: 5px"
+                type="button"
+                onclick="resetData()"
+              >
+                Close
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
       <div class="row justify-content-center">
         <div class="col">
           <div class="card">
@@ -40,15 +103,34 @@
                 enctype="multipart/form-data"
               >
                 <div class="form-group">
-                  <input
-                    type="file"
-                    class="form-control-file"
-                    id="fileUpload"
-                    name="files"
-                    multiple
-                    accept=".csv"
-                    required
-                  />
+                  <div
+                    id="drop-area"
+                    style="
+                      border: 2px dashed #ccc;
+                      padding: 20px;
+                      text-align: center;
+                    "
+                  >
+                    <p>Drag and drop files here</p>
+                    <input
+                      type="file"
+                      class="form-control-file"
+                      id="fileUpload"
+                      name="files"
+                      multiple
+                      accept=".csv"
+                      required
+                      style="display: none"
+                    />
+                    <button
+                      type="button"
+                      class="btn bton-third"
+                      onclick="document.getElementById('fileUpload').click();"
+                    >
+                      Browse Files
+                    </button>
+                    <p id="file-count" style="margin-top: 10px"></p>
+                  </div>
                 </div>
                 <button type="submit" class="btn bton-primary btn-block">
                   Upload
@@ -56,10 +138,11 @@
               </form>
             </div>
           </div>
-          <div class="custom-link">
-            <a href="{{url_for('logout')}}">Logout</a>
-          </div>
-          <div class="card" style="margin-top: -20px">
+
+          <div
+            class="card"
+            style="margin-top: -20px; border-top: none; border-bottom: none"
+          >
             <div class="card-body">
               <div class="row justify-content-center">
                 <div class="col text-center">
@@ -68,6 +151,22 @@
                     id="allCount"
                     class="gender {% if session['selectedGender'] == 'All' %}green{% endif %}"
                     >All: 0</a
+                  >
+                </div>
+                <div class="col text-center">
+                  <a
+                    href="{{url_for('setSelectedGender',gender='valid nic')}}"
+                    id="validCount"
+                    class="gender {% if session['selectedGender'] == 'valid nic' %}green{% endif %}"
+                    >Valid: 0</a
+                  >
+                </div>
+                <div class="col text-center">
+                  <a
+                    href="{{url_for('setSelectedGender',gender='invalid nic')}}"
+                    id="invalidCount"
+                    class="gender {% if session['selectedGender'] == 'invalid nic' %}green{% endif %}"
+                    >Invalid: 0</a
                   >
                 </div>
                 <div class="col text-center">
@@ -90,22 +189,23 @@
             </div>
           </div>
           <div class="card-custom">
-            <div class="card-body">
+            <div class="card-body" style="background-color: #f8f9fa">
               <div class="row justify-content-center">
                 <div class="col text-center">
-                  <a href="{{url_for('download_pdf')}}">PDF</a>
+                  <a href="#" onclick="downloadFilteredData()">PDF</a>
                 </div>
                 <div class="col text-center">
-                  <a href="{{url_for('download_excel')}}">EXCEL</a>
+                  <a href="#" onclick="downloadFilteredExcel()">EXCEL</a>
                 </div>
                 <div class="col text-center">
-                  <a href="{{url_for('download_csv')}}">CSV</a>
+                  <a href="#" onclick="downloadFilteredCSV()">CSV</a>
                 </div>
               </div>
             </div>
           </div>
           <div class="table-container">
             <div class="table-responsive">
+              <!-- Table -->
               <table class="table">
                 <thead>
                   <tr>
@@ -116,10 +216,12 @@
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="data-table">
                   {% for detail in session['details'] %} {% if
-                  session['selectedGender'] == 'All' or detail[1] ==
-                  session['selectedGender']%}
+                  session['selectedGender'] == 'All' or
+                  (session['selectedGender'] == 'valid nic' and (detail[1] ==
+                  'Male' or detail[1] == 'Female')) or detail[1] ==
+                  session['selectedGender'] %}
                   <tr>
                     <td data-label="NIC">{{ detail[0] }}</td>
                     <td data-label="Gender">{{ detail[1] }}</td>
@@ -129,8 +231,9 @@
                       <a
                         href="{{ url_for('delete_row', id=detail[4]) }}"
                         class="delete-url"
-                        >Delete</a
                       >
+                        <i class="fas fa-trash"></i>
+                      </a>
                     </td>
                   </tr>
                   {% endif %} {% endfor %}
@@ -138,20 +241,79 @@
               </table>
             </div>
           </div>
-          <div class="card" style="margin-bottom: 20px; margin-top: -20px">
-            <div class="card-body">
-              <!-- Bar Chart -->
-              <canvas id="barChart"></canvas>
-              <!-- Pie Chart -->
-              <canvas id="pieChart" style="margin-top: 20px"></canvas>
+        </div>
+      </div>
+    </div>
+        
+    {% if session['success_upload'] %}
+    <div
+      class="modals fade show"
+      id="uploadSuccessModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="uploadSuccessModalLabel"
+      aria-hidden="false"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="uploadSuccessModalLabel">
+              Upload Summary
+            </h5>
+            <form method="post" action="{{ url_for('close_modal') }}">
+              <button type="submit" class="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </form>
+          </div>
+          <div class="modal-body">
+            <div class="container container-box">
+              <div class="row justify-content-center">
+                <div class="col">
+                  <div class="card" style="margin-top: -20px; border: none">
+                    <div class="card-body stats-card">
+                      <div class="row justify-content-center">
+                        <div class="col text-center">
+                          <h6 class="gender">Male</h6>
+                          <h2 id="maleCount2" class="theData">0</h2>
+                        </div>
+                        <div class="col text-center">
+                          <h6 class="gender">Female</h6>
+                          <h2 id="femaleCount2" class="theData">0</h2>
+                        </div>
+                        <div class="col text-center">
+                          <h6 class="gender">Invalid</h6>
+                          <h2 id="invalidCount2" class="theData">0</h2>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="card"
+                    style="margin-bottom: 20px; margin-top: -20px"
+                  >
+                    <div class="card-body">
+                      <div class="justify-content-center">
+                        <div class="row">
+                          <canvas id="pieChart" class="center-canvas"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    {% endif %}
     <!-- Embed JSON data -->
     <script id="details-data" type="application/json">
       {{ session['details'] | tojson | safe }}
+    </script>
+    <script id="details-data-temp" type="application/json">
+      {{ session['temp_details'] | tojson | safe }}
     </script>
 
     <script>
@@ -159,30 +321,9 @@
       const details = JSON.parse(
         document.getElementById("details-data").textContent
       );
-
-      // Function to process data for bar chart
-      function processBarChartData(details) {
-        const ageGroups = {
-          "0-20": { male: 0, female: 0 },
-          "20-40": { male: 0, female: 0 },
-          "40-60": { male: 0, female: 0 },
-          "60-80": { male: 0, female: 0 },
-          "80-100": { male: 0, female: 0 },
-        };
-
-        details.forEach((detail) => {
-          const age = detail[3];
-          const gender = detail[1].toLowerCase();
-          if (age <= 20) ageGroups["0-20"][gender]++;
-          else if (age <= 40) ageGroups["20-40"][gender]++;
-          else if (age <= 60) ageGroups["40-60"][gender]++;
-          else if (age <= 80) ageGroups["60-80"][gender]++;
-          else if (age <= 100) ageGroups["80-100"][gender]++;
-        });
-
-        return ageGroups;
-      }
-
+      const detailsTemp = JSON.parse(
+        document.getElementById("details-data-temp").textContent
+      );
       // Function to process data for pie chart
       function processPieChartData(details) {
         const genderCounts = { male: 0, female: 0 };
@@ -200,68 +341,16 @@
         document.getElementById(
           "femaleCount"
         ).textContent = `Female: ${genderCounts.female}`;
+        document.getElementById("invalidCount").textContent = `Invalid: ${
+          details.length - (genderCounts.male + genderCounts.female)
+        }`;
+        document.getElementById("validCount").textContent = `Valid: ${
+          genderCounts.male + genderCounts.female
+        }`;
 
         return genderCounts;
       }
-
-      // Process data
-      const barChartData = processBarChartData(details);
       const pieChartData = processPieChartData(details);
-
-      // Bar Chart
-      const barCtx = document.getElementById("barChart").getContext("2d");
-      new Chart(barCtx, {
-        type: "bar",
-        data: {
-          labels: ["0-20", "20-40", "40-60", "60-80", "80-100"],
-          datasets: [
-            {
-              label: "Male",
-              data: Object.values(barChartData).map((group) => group.male),
-              backgroundColor: "rgba(217, 217, 217, 0.2)",
-              borderColor: "rgba(0, 0, 0, 1)",
-              borderWidth: 1,
-            },
-            {
-              label: "Female",
-              data: Object.values(barChartData).map((group) => group.female),
-              backgroundColor: "rgba(115, 189, 119, 0.2)",
-              borderColor: "rgba(0 ,0 ,0 , 1)",
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          scales: {
-            x: {
-              beginAtZero: true,
-            },
-            y: {
-              beginAtZero: true,
-            },
-          },
-        },
-      });
-
-      // Pie Chart
-      const pieCtx = document.getElementById("pieChart").getContext("2d");
-      new Chart(pieCtx, {
-        type: "pie",
-        data: {
-          labels: ["Male", "Female"],
-          datasets: [
-            {
-              data: [pieChartData.male, pieChartData.female],
-              backgroundColor: [
-                "rgba(217, 217, 217, 0.2)",
-                "rgba(115, 189, 119, 0.2)",
-              ],
-              borderColor: ["rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)"],
-              borderWidth: 1,
-            },
-          ],
-        },
-      });
       document.addEventListener("DOMContentLoaded", function () {
         // Select all flash messages
         const flashMessages = document.querySelectorAll(".flash");
@@ -272,6 +361,270 @@
             flashMessage.style.display = "none";
           }, 2000); // 2000 milliseconds = 2 seconds
         });
+      });
+      const dropArea = document.getElementById("drop-area");
+      const fileInput = document.getElementById("fileUpload");
+      const fileCount = document.getElementById("file-count");
+
+      // Prevent default drag behaviors
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      // Highlight drop area when item is dragged over it
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropArea.addEventListener(
+          eventName,
+          () => dropArea.classList.add("highlight"),
+          false
+        );
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropArea.addEventListener(
+          eventName,
+          () => dropArea.classList.remove("highlight"),
+          false
+        );
+      });
+
+      // Handle dropped files
+      dropArea.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        handleFiles(files);
+      }
+
+      function handleFiles(files) {
+        fileInput.files = files;
+        updateFileCount(files.length);
+      }
+
+      // Update file count when files are selected through the file input
+      fileInput.addEventListener("change", () => {
+        updateFileCount(fileInput.files.length);
+      });
+
+      function updateFileCount(count) {
+        fileCount.textContent = `${count} file(s) selected`;
+      }
+
+      let originalTableContent = "";
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        // Store the original table content when the page loads
+        const table = document.querySelector("table");
+        if (table) {
+          originalTableContent = table.innerHTML;
+        }
+        checkNoData();
+      });
+
+      function filterData(event) {
+        event.preventDefault();
+        const query = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+
+        const rows = document.querySelectorAll("table tbody tr");
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          if (!text.includes(query)) {
+            row.remove();
+          }
+          checkNoData();
+        });
+      }
+
+      function resetData() {
+        const table = document.querySelector("table");
+        if (table) {
+          table.innerHTML = originalTableContent;
+        }
+        document.getElementById("searchInput").value = "";
+        checkNoData();
+      }
+      function checkNoData() {
+        const rows = document.querySelectorAll("table tbody tr");
+        if (rows.length === 0) {
+          const tableBody = document.querySelector("table tbody");
+          const noDataRow = document.createElement("tr");
+          const noDataCell = document.createElement("td");
+          noDataCell.colSpan =
+            document.querySelectorAll("table thead th").length;
+          noDataCell.textContent = "-No data-";
+          noDataCell.style.textAlign = "center";
+          noDataRow.appendChild(noDataCell);
+          tableBody.appendChild(noDataRow);
+        }
+      }
+      function downloadFilteredData() {
+        const rows = document.querySelectorAll("table tbody tr");
+        const details = [];
+
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length > 0) {
+            details.push({
+              nic: cells[0].textContent.trim(),
+              dob: cells[1].textContent.trim(),
+              gender: cells[2].textContent.trim(),
+              age: cells[3].textContent.trim(),
+            });
+          }
+        });
+
+        fetch("/download/pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ details: details }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user_data_filtered.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+      function downloadFilteredExcel() {
+        const rows = document.querySelectorAll("table tbody tr");
+        const details = [];
+
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length > 0) {
+            details.push({
+              nic: cells[0].textContent.trim(),
+              dob: cells[1].textContent.trim(),
+              gender: cells[2].textContent.trim(),
+              age: cells[3].textContent.trim(),
+            });
+          }
+        });
+
+        fetch("/download/excel", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ details: details }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user_data_filtered.xlsx";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+      function downloadFilteredCSV() {
+        const rows = document.querySelectorAll("table tbody tr");
+        const details = [];
+
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length > 0) {
+            details.push({
+              nic: cells[0].textContent.trim(),
+              dob: cells[1].textContent.trim(),
+              gender: cells[2].textContent.trim(),
+              age: cells[3].textContent.trim(),
+            });
+          }
+        });
+
+        fetch("/download/csv", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ details: details }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "user_data_filtered.csv";
+            document.body.append(a);
+            a.click();
+            a.remove();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      function processPieChartData2(details) {
+        const genderCounts = { male: 0, female: 0, invalidnic: 0 };
+
+        details.forEach((detail) => {
+          const gender = detail[1].toLowerCase().replace(/\s+/g, "");
+          genderCounts[gender]++;
+        });
+
+        // Update the text content of the elements
+        document.getElementById("maleCount2").textContent = genderCounts.male;
+        document.getElementById("femaleCount2").textContent =
+          genderCounts.female;
+        document.getElementById("invalidCount2").textContent =
+          genderCounts.invalidnic;
+
+        return genderCounts;
+      }
+
+      const pieChartData2 = processPieChartData2(detailsTemp);
+
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+      new Chart(pieCtx, {
+        type: "pie",
+        data: {
+          labels: ["Male", "Female", "Invalid"],
+          datasets: [
+            {
+              data: [
+                pieChartData2.male,
+                pieChartData2.female,
+                pieChartData2.invalidnic,
+              ],
+              backgroundColor: [
+                "rgba(116, 167, 252, 1)",
+                "rgba(250, 195, 85, 1)",
+                "rgba(255, 99, 132, 1)",
+              ],
+              borderColor: [
+                "rgba(0, 0, 0, 1)",
+                "rgba(0, 0, 0, 1)",
+                "rgba(0, 0, 0, 1)",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        },
       });
     </script>
 

@@ -2,7 +2,13 @@
 
 body {
     font-family: 'Poppins', sans-serif;
+    background-image: url('backgr2.jpg'); /* Path to your background image */
+    background-size: contain; /* Cover the entire background */
+    background-position: center; /* Center the background image */
+    background-attachment: fixed;
+    position: relative; /* Ensure the pseudo-element is positioned relative to the body */
 }
+
 .card-header {
     height: 60px; /* Adjust the height as needed */
     display: flex;
@@ -16,13 +22,33 @@ body {
     border-color: #d9d9d9;
 }
 .bton-primary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+.bton-primary:hover {
     background-color: #73bd77;
     border-color: #73bd77;
     color: white;
 }
-.bton-primary:hover {
-    background-color: #4CAF50;
-    border-color: #4CAF50;
+.bton-secondary {
+    background-color: #ffffff;
+    border-color: #6c757d;
+    color: #6c757d;
+}
+.bton-secondary:hover {
+    background-color: #fa5b53;
+    border-color: #fa5b53;
+    color: white;
+}
+.bton-third {
+    background-color: #ffffff;
+    border-color: #6c757d;
+    color: #6c757d;
+}
+.bton-third:hover {
+    background-color: #d9d9d9;
+    border-color: #d9d9d9;
     color: white;
 }
 .card {
@@ -30,6 +56,8 @@ body {
     border-image: linear-gradient(to bottom,
         rgba(0, 0, 0, 0) 50%, 
         rgb(0, 0, 0) 100%) 1;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid #ddd;
 }
 .card-custom {
     border: 2px solid transparent;
@@ -38,11 +66,11 @@ body {
 }
 .card-header {
     border:none;
-    background: #73bd77;
+    background: #f8f9fa;
 }
 h5{
     margin-top: 5px;
-    color: #ffffff;
+    color: #73bd77;
     font-size: 20px;
     font-weight: 550;
 }
@@ -90,20 +118,94 @@ a:hover{
 .table th {
     padding-top: 12px;
     padding-bottom: 12px;
+    background-color: #ffffff;
 }
 .table tbody tr {
     margin-bottom: 20px;
+    background-color: #ffffff;
 }
 .table tbody tr:last-child {
     margin-bottom: 0;
 }
+.table tbody tr:nth-of-type(even) {
+    background-color: #f8f9fa; /* Light grey background for even rows */
+}
 
 .delete-url:hover{
-color: #ff3838;
+color: #fa5b53;
 }
 .green{
     color: #4CAF50;
 }
+.navbar-custom {
+    background-color: #000000;/* Adjust the height as needed */
+  }
+  
+  .navbar-custom .navbar-brand,
+  .navbar-custom .nav-link {
+    color: white;
+    transition: 0.3s;
+  }
+  
+  .navbar-custom .nav-link:hover {
+    color: #73bd77;
+  }
+  
+  .navbar-custom .navbar-toggler-icon {
+    background-image: none;
+    color: white;
+  }
+  
+  .navbar-custom .navbar-toggler-icon::before {
+    content: '\2630'; /* Unicode character for menu icon */
+    font-size: 1.5em;
+    color: white;
+  }
+  
+  h6 {
+    font-size: 18px;
+    margin-top: 5px;
+    color: #000000;
+    
+  }
+  .stats-card {
+  background-color: #f8f9fa; /* Light background color */
+  padding: 20px; /* Padding inside the card */
+  margin-bottom: -20px; /* Space below the card */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  border: 1px solid #ddd; /* Light border */
+}
+
+.stats-card .row {
+  margin-bottom: 10px; /* Space between rows */
+  border-bottom: 1px solid #ddd; /* Line between rows */
+  padding-bottom: 10px; /* Padding below the row */
+}
+
+.stats-card .row:last-child {
+  border-bottom: none; /* Remove border from the last row */
+}
+
+.stats-card .gender {
+  font-size: 1.0em; /* Larger font size */
+  color: #333; /* Dark text color */
+}
+.stats-card .theData {
+  color: #4CAF50; /* Dark text color */
+}
+.highlight {
+    background-color: #f8f9fa;
+    color: #4CAF50;
+    border-radius: 5px;
+}
+.shadow-form {
+    border-radius: 5px;
+    border-width: 2px;
+    background-color: #f8f9fa;
+    border-color: #000000;
+  }
+   
 .flash {
     padding: 10px;
     margin-bottom: 10px;
@@ -112,7 +214,7 @@ color: #ff3838;
 }
 .flash {
     position: fixed;
-    top: 8px;
+    top: 64px;
     left: 50%;
     transform: translateX(-50%);
     padding: 10px;
@@ -123,11 +225,11 @@ color: #ff3838;
     opacity: 0.7;
 }
 .flash-success {
-    background-color: #84df87;
+    background-color: #73bd77;
     color: white;
 }
 .flash-error {
-    background-color: #eb837c;
+    background-color: #fa5b53;
     color: white;
 }
 .flash-close {
@@ -135,4 +237,55 @@ color: #ff3838;
     top: 5px;
     right: 10px;
     cursor: pointer;
+}
+
+.modals {
+    position: fixed;
+    z-index: 1;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+  }
+  .center-canvas {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .center-canvas2 {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  /* width: 100%;
+  height: 400px; */
+}
+@keyframes slideInFromLeft {
+	0% {
+		transform: translateX(-300px);
+		opacity: 0;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Apply the animation to the table */
+.table-container {
+    animation: slideInFromLeft 0.3s ease-out;
+}
+.card , .form-group,.theData,#barChart,#pieChart{
+    animation: fadeIn 0.3s ease-in;
 }

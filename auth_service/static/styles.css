@@ -2,10 +2,16 @@
 
 body {
   font-family: "Poppins", sans-serif;
+  background-image: url('backgr2.jpg'); /* Path to your background image */
+    background-size: contain; /* Cover the entire background */
+    background-position: center; /* Center the background image */
+    background-attachment: fixed;
+    position: relative;
 }
+
 h5 {
   margin-top: 5px;
-  color: #ffffff;
+  color: #73bd77;
   font-size: 20px;
   font-weight: 550;
 }
@@ -22,14 +28,14 @@ h5 {
   border-color: #d9d9d9;
 }
 .bton-primary {
+  background-color: #6c757d;
+  border-color: #6c757d;
   color: white;
-  background-color: #73bd77;
-  border-color: #73bd77;
 }
 .bton-primary:hover {
-  color: white;
-  background-color: #4caf50;
-  border-color: #4caf50;
+  background-color: #ffffff;
+  border-color: #6c757d;
+  color: #6c757d;
 }
 .card {
   border: 2px solid transparent;
@@ -39,13 +45,14 @@ h5 {
       rgb(0, 0, 0) 100%
     )
     1;
+    
 }
 .card-header {
-  border: none;
-  background: #73bd77;
+  border:none;
+  background: #f8f9fa;
 }
 h3 {
-  color: #ffffff;
+  color: #73bd77;
   font-size: 30px;
   font-weight: 550;
 }
@@ -76,7 +83,7 @@ a:hover {
 }
 .flash {
   position: fixed;
-  top: 8px;
+  top: 64px;
   left: 50%;
   transform: translateX(-50%);
   padding: 10px;
@@ -100,14 +107,44 @@ a:hover {
   right: 10px;
   cursor: pointer;
 }
+.navbar-custom {
+  background-color: #000000;/* Adjust the height as needed */
+}
 
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+  color: white;
+  transition: 0.3s;
+}
+
+.navbar-custom .nav-link:hover {
+  color: #73bd77;
+  
+}
+
+.navbar-custom .navbar-toggler-icon {
+  background-image: none;
+  color: white;
+}
+
+.navbar-custom .navbar-toggler-icon::before {
+  content: '\2630'; /* Unicode character for menu icon */
+  font-size: 1.5em;
+  color: white;
+}
 @keyframes slideInFromLeft {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
+	0% {
+		transform: translateX(-300px);
+		opacity: 0;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+
+/* Apply the animation to the desired elements */
+.card, .form-group {
+  animation: slideInFromLeft 0.3s ease-out;
 }
