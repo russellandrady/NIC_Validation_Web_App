@@ -115,6 +115,62 @@ def fetchData(user_id):
     session['success_upload']=False
     cur.close()
 
+def fetchData2(user_id):
+    per_page = 20
+    cur = mysql.connection.cursor()
+    
+    # Calculate offset
+    offset = (session['page'] - 1) * per_page
+
+    # Fetch paginated data
+    cur.execute("SELECT nic, gender, dob, age, id FROM nics WHERE user_id = %s LIMIT %s OFFSET %s", 
+                (user_id, per_page, offset))
+
+    # Initialize session if not present
+    if 'details' not in session:
+        session['details'] = []
+    if 'temp_details' not in session:
+        session['temp_details'] = []
+    
+    current_details = cur.fetchall()
+
+    session['details'] = current_details
+    session['selectedGender'] = 'All'
+    session['success_upload'] = False
+    
+    # Get the total count of records
+    cur.execute("SELECT COUNT(*) FROM nics WHERE user_id = %s", (user_id,))
+    total_records = cur.fetchone()[0]
+    
+    # Calculate total pages
+    total_pages = (total_records + per_page - 1) // per_page
+
+    # Store total pages in session
+    session['total_pages'] = total_pages
+    
+    cur.close()
+
+@app.route('/setPage', methods=['GET'])
+def setPage():
+    try:
+        token = request.cookies.get('token')
+        session['page'] = int(request.args.get('page', 1))
+        try:
+                decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                user_id = decoded['user_id']
+        except jwt.ExpiredSignatureError:
+            flash('User session expired','error')
+            return redirect("http://localhost:5000/")
+        except jwt.InvalidTokenError:
+            flash('Invalid token','error')
+            return redirect("http://localhost:5000/")
+        fetchData(user_id)
+    except Exception as e:
+        flash(f"Error: {e}", 'error')
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/setGender', methods=['GET', 'POST'])
 def setSelectedGender():
     try:
@@ -151,6 +207,16 @@ def home():
     try:
         # session['details']=[]
         session.clear()
+        session['total_pages'] = 1
+        session['temp_details']=[]
+        session['male_count']=0
+        session['female_count'] =0
+        session['age_groups']=[]
+        session['oldest_person']=[]
+        session['youngest_person']=[]
+        session['average_age']=0
+        session['temp_details']=[]
+        session['details']=[]
         token = None
         if 'token' in request.cookies:
             # token = request.cookies.get('token')
@@ -161,6 +227,7 @@ def home():
             try:
                 decoded = jwt.decode(token, app.secret_key, algorithms=['HS256'])
                 user_id = decoded['user_id']
+                session['page']=1
                 fetchData(user_id)
                 resp = make_response(redirect(url_for('dashboard')))
                 resp.set_cookie('token', token, httponly=True, samesite='Strict')

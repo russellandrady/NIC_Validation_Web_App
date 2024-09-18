@@ -13,7 +13,10 @@
       href="{{ url_for('static', filename='styles_for_dashboard.css') }}"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
   </head>
   <body>
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
@@ -182,12 +185,11 @@
                     >Female: 0</a
                   >
                 </div>
-                
               </div>
             </div>
           </div>
           <div class="card-custom">
-            <div class="card-body" style="background-color: #f8f9fa;">
+            <div class="card-body" style="background-color: #f8f9fa">
               <div class="row justify-content-center">
                 <div class="col text-center">
                   <a href="#" onclick="downloadFilteredData()">PDF</a>
@@ -226,7 +228,10 @@
                     <td data-label="DOB">{{ detail[2] }}</td>
                     <td data-label="Age">{{ detail[3] }}</td>
                     <td>
-                                            <a href="{{ url_for('delete_row', id=detail[4]) }}" class="delete-url">
+                      <a
+                        href="{{ url_for('delete_row', id=detail[4]) }}"
+                        class="delete-url"
+                      >
                         <i class="fas fa-trash"></i>
                       </a>
                     </td>
@@ -239,12 +244,22 @@
         </div>
       </div>
     </div>
+        
     {% if session['success_upload'] %}
-    <div class="modals fade show" id="uploadSuccessModal" tabindex="-1" role="dialog" aria-labelledby="uploadSuccessModalLabel" aria-hidden="false">
+    <div
+      class="modals fade show"
+      id="uploadSuccessModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="uploadSuccessModalLabel"
+      aria-hidden="false"
+    >
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="uploadSuccessModalLabel">Upload Summary</h5>
+            <h5 class="modal-title" id="uploadSuccessModalLabel">
+              Upload Summary
+            </h5>
             <form method="post" action="{{ url_for('close_modal') }}">
               <button type="submit" class="close" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
@@ -255,8 +270,8 @@
             <div class="container container-box">
               <div class="row justify-content-center">
                 <div class="col">
-                  <div class="card" style="margin-top: -20px; border: none; ">
-                                <div class="card-body stats-card">
+                  <div class="card" style="margin-top: -20px; border: none">
+                    <div class="card-body stats-card">
                       <div class="row justify-content-center">
                         <div class="col text-center">
                           <h6 class="gender">Male</h6>
@@ -271,13 +286,15 @@
                           <h2 id="invalidCount2" class="theData">0</h2>
                         </div>
                       </div>
-                      
                     </div>
                   </div>
-                  <div class="card" style="margin-bottom: 20px; margin-top: -20px;">
+                  <div
+                    class="card"
+                    style="margin-bottom: 20px; margin-top: -20px"
+                  >
                     <div class="card-body">
                       <div class="justify-content-center">
-                                                <div class="row">
+                        <div class="row">
                           <canvas id="pieChart" class="center-canvas"></canvas>
                         </div>
                       </div>
@@ -286,9 +303,7 @@
                 </div>
               </div>
             </div>
-            
           </div>
-          
         </div>
       </div>
     </div>
@@ -563,23 +578,24 @@
             console.error("Error:", error);
           });
       }
-            
-        function processPieChartData2(details) {
-          const genderCounts = { male: 0, female: 0, invalidnic: 0 };
-      
-          details.forEach((detail) => {
-            const gender = detail[1].toLowerCase().replace(/\s+/g, '');
-            genderCounts[gender]++;
-          });
-      
-          // Update the text content of the elements
-          document.getElementById("maleCount2").textContent = genderCounts.male;
-          document.getElementById("femaleCount2").textContent = genderCounts.female;
-          document.getElementById("invalidCount2").textContent = genderCounts.invalidnic;
-      
-          return genderCounts;
-        }
-      
+
+      function processPieChartData2(details) {
+        const genderCounts = { male: 0, female: 0, invalidnic: 0 };
+
+        details.forEach((detail) => {
+          const gender = detail[1].toLowerCase().replace(/\s+/g, "");
+          genderCounts[gender]++;
+        });
+
+        // Update the text content of the elements
+        document.getElementById("maleCount2").textContent = genderCounts.male;
+        document.getElementById("femaleCount2").textContent =
+          genderCounts.female;
+        document.getElementById("invalidCount2").textContent =
+          genderCounts.invalidnic;
+
+        return genderCounts;
+      }
 
       const pieChartData2 = processPieChartData2(detailsTemp);
 
@@ -590,19 +606,26 @@
           labels: ["Male", "Female", "Invalid"],
           datasets: [
             {
-              data: [pieChartData2.male, pieChartData2.female, pieChartData2.invalidnic],
+              data: [
+                pieChartData2.male,
+                pieChartData2.female,
+                pieChartData2.invalidnic,
+              ],
               backgroundColor: [
                 "rgba(116, 167, 252, 1)",
                 "rgba(250, 195, 85, 1)",
                 "rgba(255, 99, 132, 1)",
               ],
-              borderColor: ["rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)"],
+              borderColor: [
+                "rgba(0, 0, 0, 1)",
+                "rgba(0, 0, 0, 1)",
+                "rgba(0, 0, 0, 1)",
+              ],
               borderWidth: 1,
             },
           ],
         },
       });
-      
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
